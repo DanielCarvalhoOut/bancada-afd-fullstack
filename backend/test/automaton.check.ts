@@ -4,7 +4,7 @@
  */
 import { strict as assert } from 'node:assert';
 import {
-  AutomatonModel, EPS, equivalence, parseAlphabet, simulateNfa, validateAlphabet,
+  AutomatonModel, EPS, determinize, equivalence, parseAlphabet, simulateNfa, validateAlphabet,
 } from '../src/domain/automaton';
 
 function acceptsAny(m: AutomatonModel, w: string): boolean {
@@ -75,5 +75,44 @@ assert.ok('error' in (parseAlphabet(' ') as object));
 assert.ok('error' in (validateAlphabet(['ab']) as object), 'lista de um item com 2 caracteres');
 assert.ok('error' in (validateAlphabet([1]) as object));
 assert.deepEqual(validateAlphabet(['a', 'b']), ['a', 'b']);
+
+// 4) ids com '|' e '#' não podem colidir na chave dos conjuntos.
+// Com join('|'), {"a|b"} (só aceitação) e {"a","b"} (nenhum aceita) teriam a mesma
+// chave: a BFS acharia o par "já visto" e perderia a divergência.
+const st = (id: string, initial: boolean, accepting: boolean) => ({ id, name: id, initial, accepting, x: 0, y: 0 });
+const tricky: AutomatonModel = {
+  kind: 'afn',
+  states: [st('i', true, false), st('a|b', false, true), st('a', false, false), st('b', false, false)],
+  transitions: [
+    { from: 'i', to: 'a|b', symbols: ['0'] },
+    { from: 'i', to: 'a', symbols: ['1'] }, { from: 'i', to: 'b', symbols: ['1'] },
+  ],
+};
+// B leva "0" e "1" ao mesmo estado: os pares ({a|b},{f}) e ({a,b},{f}) só se
+// distinguem pelo lado A. Se colidissem, a divergência em "1" sumiria.
+const oneSymbol: AutomatonModel = {
+  states: [st('i', true, false), st('f', false, true)],
+  transitions: [{ from: 'i', to: 'f', symbols: ['0', '1'] }],
+};
+assert.deepEqual(equivalence(tricky, oneSymbol), { equivalent: false, alphabet: ['0', '1'], witness: '1', acceptedBy: 'b' });
+const det = determinize(tricky);
+if ('error' in det) throw new Error(det.error);
+assert.equal(det.subsets.length, 4, 'determinize fundiu {a|b} com {a,b}'); // {i}, {a|b}, {a,b}, ∅
+
+// 5) símbolo em transição mas fora de Σ não conta para a linguagem
+const foreignX: AutomatonModel = {
+  alphabet: ['a'],
+  states: [st('i', true, true), st('f', false, true)],
+  transitions: [{ from: 'i', to: 'i', symbols: ['a'] }, { from: 'i', to: 'f', symbols: ['x'] }],
+};
+const aStarOverAx: AutomatonModel = { ...onlyA, alphabet: ['a', 'x'] };
+assert.deepEqual(equivalence(foreignX, aStarOverAx), { equivalent: true, alphabet: ['a', 'x'] });
+
+// 6) vírgula e espaço não são símbolos; entrada vazia no meio é erro
+assert.ok('error' in (validateAlphabet([',']) as object));
+assert.ok('error' in (validateAlphabet([' ']) as object));
+assert.ok('error' in (parseAlphabet('a,,b') as object));
+assert.deepEqual(parseAlphabet('a, b,'), ['a', 'b']);
+assert.deepEqual(parseAlphabet('a b'), ['a', 'b']);
 
 console.log('automaton.check: ok');

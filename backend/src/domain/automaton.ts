@@ -56,8 +56,12 @@ export function realSymbols(model: AutomatonModel): string[] {
  * é lida caractere a caractere na simulação.
  */
 export function parseAlphabet(text: string): string[] | { error: string } {
-  const raw = text.includes(',') ? text.split(',') : [...text];
-  return validateAlphabet(raw.map((s) => s.trim()).filter((s) => s.length));
+  const raw = text.includes(',') ? text.split(',') : [...text].filter((c) => !/\s/u.test(c));
+  const syms = raw.map((s) => s.trim());
+  // vírgula sobrando no fim ("a, b,") é tolerada; entrada vazia no meio é erro
+  if (syms.length > 1 && syms[syms.length - 1] === '') syms.pop();
+  if (syms.length && syms.some((s) => s === '')) return { error: 'Há um símbolo vazio entre vírgulas.' };
+  return validateAlphabet(syms.filter((s) => s.length));
 }
 
 /** Valida uma lista de símbolos já separada (ex.: vinda de JSON importado). */
@@ -69,6 +73,9 @@ export function validateAlphabet(input: unknown[]): string[] | { error: string }
   for (const s of syms) {
     if ([...s].length !== 1) return { error: `"${s}" tem mais de um caractere; cada símbolo é um caractere.` };
     if (s === EPS) return { error: 'ε é a palavra vazia, não pode ser símbolo do alfabeto.' };
+    // vírgula separa símbolos e espaços são aparados ao digitar: aceitá-los
+    // aqui faria o Σ mudar sozinho ao ser editado de novo na tela
+    if (s === ',' || /\s/u.test(s)) return { error: 'Vírgula e espaço não podem ser símbolos do alfabeto.' };
   }
   if (new Set(syms).size !== syms.length) return { error: 'Há símbolos repetidos.' };
   return syms;
@@ -208,6 +215,15 @@ export function moveSet(model: AutomatonModel, ids: string[], sym: string): stri
   return [...out];
 }
 
+/**
+ * Chave de um conjunto de estados para deduplicação. Usa JSON em vez de juntar
+ * com separador porque ids são texto livre: com join('|'), {"a|b"} e {"a","b"}
+ * teriam a mesma chave.
+ */
+export function setKey(ids: string[]): string {
+  return JSON.stringify(ids.slice().sort());
+}
+
 /** Nome legível de um conjunto de estados: "A,B" (ou "∅"). */
 export function nameSet(model: AutomatonModel, ids: string[]): string {
   if (!ids.length) return '∅';
@@ -280,14 +296,12 @@ export function determinize(model: AutomatonModel): Determinization | { error: s
   const init = initialState(model);
   if (!init) return { error: 'Defina um estado inicial no AFN antes de determinizar.' };
   const syms = realSymbols(model);
-  const key = (ids: string[]) => ids.slice().sort().join('|');
-
   const subsets: Subset[] = [];
   const byKey = new Map<string, number>();
   const queue: number[] = [];
 
   const ensure = (ids: string[]): number => {
-    const k = key(ids);
+    const k = setKey(ids);
     const found = byKey.get(k);
     if (found != null) return found;
     const index = subsets.length;
@@ -366,7 +380,7 @@ export type Equivalence =
  * Decide se A e B aceitam a mesma linguagem, sem exigir que sejam AFDs.
  * Percorre em largura o autômato produto dos dois "determinizados sob demanda"
  * (cada lado é um conjunto de estados, com fecho-ε), sobre Σ(A) ∪ Σ(B). Um
- * símbolo que um lado não conhece leva esse lado ao conjunto vazio (rejeição).
+ * símbolo fora do Σ de um lado leva esse lado ao conjunto vazio (rejeição).
  * A primeira dupla em que só um lado aceita dá o contraexemplo mais curto.
  */
 export function equivalence(a: AutomatonModel, b: AutomatonModel): Equivalence | { error: string } {
@@ -375,13 +389,20 @@ export function equivalence(a: AutomatonModel, b: AutomatonModel): Equivalence |
   if (!initA) return { error: 'O seu autômato não tem estado inicial.' };
   if (!initB) return { error: 'O autômato de referência não tem estado inicial.' };
 
-  const alphabet = [...new Set([...realSymbols(a), ...realSymbols(b)])].sort();
-  const key = (ids: string[]) => ids.slice().sort().join('|');
+  const sigmaA = realSymbols(a);
+  const sigmaB = realSymbols(b);
+  const alphabet = [...new Set([...sigmaA, ...sigmaB])].sort();
+  // A linguagem de cada autômato é sobre o SEU Σ: símbolo fora dele leva ao
+  // conjunto vazio, mesmo que haja transição com ele (ex.: JSON importado).
+  // Mesma regra de trace/simulateNfa/determinize, que só leem símbolos de Σ.
+  const step = (m: AutomatonModel, sigma: string[], set: string[], sym: string) =>
+    sigma.includes(sym) ? epsClosure(m, moveSet(m, set, sym)) : [];
+  const pairKey = (sa: string[], sb: string[]) => setKey(sa) + setKey(sb); // JSON delimita cada lado
   const acc = (m: AutomatonModel, ids: string[]) => ids.some((id) => getState(m, id)?.accepting);
 
   type Node = { sa: string[]; sb: string[]; word: string };
   const start: Node = { sa: epsClosure(a, [initA.id]), sb: epsClosure(b, [initB.id]), word: '' };
-  const seen = new Set([key(start.sa) + '#' + key(start.sb)]);
+  const seen = new Set([pairKey(start.sa, start.sb)]);
   const queue: Node[] = [start];
 
   while (queue.length) {
@@ -389,9 +410,9 @@ export function equivalence(a: AutomatonModel, b: AutomatonModel): Equivalence |
     const inA = acc(a, sa);
     if (inA !== acc(b, sb)) return { equivalent: false, alphabet, witness: word, acceptedBy: inA ? 'a' : 'b' };
     for (const sym of alphabet) {
-      const na = epsClosure(a, moveSet(a, sa, sym));
-      const nb = epsClosure(b, moveSet(b, sb, sym));
-      const k = key(na) + '#' + key(nb);
+      const na = step(a, sigmaA, sa, sym);
+      const nb = step(b, sigmaB, sb, sym);
+      const k = pairKey(na, nb);
       if (seen.has(k)) continue;
       seen.add(k);
       queue.push({ sa: na, sb: nb, word: word + sym });
