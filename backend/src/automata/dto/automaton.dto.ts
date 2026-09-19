@@ -1,6 +1,6 @@
 import { Type } from 'class-transformer';
 import {
-  ArrayMaxSize, ArrayMinSize, ArrayUnique, IsArray, IsBoolean, IsIn, IsInt,
+  ArrayMaxSize, ArrayMinSize, ArrayUnique, IsArray, IsBoolean, IsIn, IsNumber,
   IsOptional, IsString, Matches, MaxLength, ValidateNested,
 } from 'class-validator';
 import { AutomatonKind } from '../../domain/automaton';
@@ -10,8 +10,9 @@ export class StateDto {
   @IsString() @MaxLength(40) name: string;
   @IsBoolean() initial: boolean;
   @IsBoolean() accepting: boolean;
-  @IsInt() x: number;
-  @IsInt() y: number;
+  // posição no canvas: criar/arrastar com o mouse gera valores fracionados
+  @IsNumber({ allowNaN: false, allowInfinity: false }) x: number;
+  @IsNumber({ allowNaN: false, allowInfinity: false }) y: number;
 }
 
 export class TransitionDto {
