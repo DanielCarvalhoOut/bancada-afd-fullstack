@@ -1,0 +1,22 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: bancada-afd-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: bancada
+      POSTGRES_PASSWORD: bancada
+      POSTGRES_DB: bancada_afd
+    ports:
+      # porta pedida no projeto: host 54327 -> container 5432
+      - "54327:5432"
+    volumes:
+      - bancada_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U bancada -d bancada_afd"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  bancada_pgdata:

@@ -1,0 +1,272 @@
+<div class="work" [attr.data-space]="space">
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <button class="iconbtn" (click)="toPortal()" title="Voltar ao portal" aria-label="Voltar ao portal">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"></rect><rect x="14" y="3" width="7" height="7" rx="1"></rect><rect x="3" y="14" width="7" height="7" rx="1"></rect><rect x="14" y="14" width="7" height="7" rx="1"></rect></svg>
+    </button>
+    <div class="brand mono">bancada</div>
+
+    <div class="spaceswitch">
+      <span class="thumb" [class.afn]="space==='afn'"></span>
+      <button [class.on]="space==='afd'" (click)="switchSpace('afd')">AFD <span class="k">det</span></button>
+      <button [class.on]="space==='afn'" (click)="switchSpace('afn')">AFN <span class="k">n-det</span></button>
+    </div>
+
+    <div class="spacer"></div>
+
+    <button class="tbtn" [class.active]="mode==='addState'" (click)="setMode('addState')" title="Novo estado">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="8"></circle><line x1="12" y1="9" x2="12" y2="15"></line><line x1="9" y1="12" x2="15" y2="12"></line></svg>Estado
+    </button>
+    <button class="tbtn" [class.active]="mode==='addTrans'" (click)="setMode('addTrans')" title="Nova transição">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="12" x2="18" y2="12"></line><polyline points="14 8 20 12 14 16"></polyline></svg>Transição
+    </button>
+    <button class="tbtn" [class.active]="mode==='select'" (click)="setMode('select')" title="Selecionar vários">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-dasharray="3.2 3.2"><rect x="4" y="4" width="16" height="16" rx="2"></rect></svg>Selecionar
+    </button>
+    <div class="sep"></div>
+    <button class="tbtn" (click)="openSim()" title="Simular palavra">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="6 4 20 12 6 20 6 4"></polygon></svg>Simular
+    </button>
+    <button class="tbtn primary" *ngIf="space==='afn'" (click)="openDeterminize()" title="Converter AFN em AFD">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16"></path><path d="M4 12h10"></path><path d="M4 17h7"></path><path d="M20 14l-3 3 3 3"></path></svg>Determinizar
+    </button>
+    <button class="tbtn" (click)="openLibrary()" title="Biblioteca (API)">Biblioteca</button>
+    <button class="tbtn" (click)="openExport()">Exportar</button>
+    <button class="tbtn" (click)="openImport()">Importar</button>
+    <button class="iconbtn" (click)="theme.toggle()" title="Alternar tema" aria-label="Alternar tema">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8z"></path></svg>
+    </button>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+    <div class="stage-wrap">
+      <div class="hint" *ngIf="hint">{{ hint }}</div>
+      <div class="watermark mono">{{ space==='afd' ? 'AFD' : 'AFN' }}</div>
+
+      <svg #stage class="stage" [class.mode-add]="mode==='addState'" [class.mode-trans]="mode==='addTrans'" [class.mode-select]="mode==='select'"
+           [attr.viewBox]="layout.viewBox" preserveAspectRatio="xMidYMid meet"
+           (pointerdown)="onDown($event)" (pointermove)="onMove($event)" (pointerup)="onUp($event)" (wheel)="onWheel($event)">
+        <defs>
+          <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M0 0 L10 5 L0 10 z" class="edge-arrowhead"></path>
+          </marker>
+        </defs>
+
+        <!-- edges -->
+        <g>
+          <ng-container *ngFor="let e of layout.edges">
+            <path [attr.d]="e.d" class="edge" [class.eps]="e.eps" [class.selected]="e.selected" marker-end="url(#ah)"></path>
+            <path [attr.d]="e.d" class="edge-hit" [attr.data-edge]="e.key"></path>
+            <rect class="edge-label-bg" [attr.x]="e.lx - e.labelW/2" [attr.y]="e.ly - 8" [attr.width]="e.labelW" height="15" rx="3"></rect>
+            <text class="edge-label" [class.eps]="e.eps" [attr.x]="e.lx" [attr.y]="e.ly + 4" text-anchor="middle" [attr.data-edge]="e.key">{{ e.label }}</text>
+          </ng-container>
+        </g>
+
+        <!-- start arrow -->
+        <path *ngIf="layout.start" class="start-arrow" marker-end="url(#ah)"
+              [attr.d]="'M ' + layout.start.x1 + ' ' + layout.start.y1 + ' L ' + layout.start.x2 + ' ' + layout.start.y2"></path>
+
+        <!-- nodes -->
+        <g *ngFor="let n of layout.nodes" class="st-node" [class.selected]="n.selected" [class.pending]="n.pending" [class.active]="n.active" [attr.data-node]="n.id">
+          <ng-container *ngIf="n.accepting; else plain">
+            <circle [attr.cx]="n.x" [attr.cy]="n.y" [attr.r]="28" class="st-accept"></circle>
+            <circle [attr.cx]="n.x" [attr.cy]="n.y" [attr.r]="23" class="st-accept-ring"></circle>
+          </ng-container>
+          <ng-template #plain><circle [attr.cx]="n.x" [attr.cy]="n.y" [attr.r]="28" class="st-normal"></circle></ng-template>
+          <text class="st-label" [attr.x]="n.x" [attr.y]="n.y + 4.5" text-anchor="middle">{{ n.name }}</text>
+        </g>
+
+        <!-- marquee -->
+        <rect *ngIf="marqueeRect" class="marquee-rect" [attr.x]="marqueeRect.x" [attr.y]="marqueeRect.y" [attr.width]="marqueeRect.w" [attr.height]="marqueeRect.h" rx="2"></rect>
+      </svg>
+
+      <!-- picker -->
+      <div class="picker" *ngIf="picker">
+        <div class="ptitle">Símbolo(s) desta transição</div>
+        <div class="prow">
+          <button *ngFor="let s of pickerSyms" class="sym" [class.sel]="picker.chosen.includes(s)" (click)="toggleSym(s)">{{ s }}</button>
+        </div>
+        <button class="tbtn primary" (click)="confirmPicker()">Adicionar</button>
+        <button class="tbtn" (click)="cancelPicker()">Cancelar</button>
+      </div>
+
+      <div class="zoom-ctrl">
+        <button (click)="zoomIn()" aria-label="Aproximar"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"></circle><line x1="11" y1="8" x2="11" y2="14"></line><line x1="8" y1="11" x2="14" y2="11"></line><line x1="21" y1="21" x2="16.2" y2="16.2"></line></svg></button>
+        <div class="zread mono">{{ zoomRead }}%</div>
+        <button (click)="zoomOut()" aria-label="Afastar"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"></circle><line x1="8" y1="11" x2="14" y2="11"></line><line x1="21" y1="21" x2="16.2" y2="16.2"></line></svg></button>
+        <button (click)="fit()" aria-label="Ajustar"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 9 4 4 9 4"></polyline><polyline points="20 9 20 4 15 4"></polyline><polyline points="4 15 4 20 9 20"></polyline><polyline points="20 15 20 20 15 20"></polyline></svg></button>
+      </div>
+    </div>
+
+    <!-- SIDE -->
+    <div class="side">
+      <div class="tabs">
+        <button class="tab" [class.active]="tab==='props'" (click)="tab='props'">Propriedades</button>
+        <button class="tab" [class.active]="tab==='analise'" (click)="tab='analise'">Análise</button>
+      </div>
+
+      <!-- PROPS -->
+      <div class="panel" *ngIf="tab==='props'">
+        <div class="empty-note" *ngIf="!selState && !selEdge && !multi.length">
+          Nada selecionado.<br><br>
+          Use <b>Estado</b> e clique na tela para criar; <b>Transição</b> e clique em dois estados para ligar.
+          <span *ngIf="space==='afn'">No espaço AFN, a transição-ε aparece como opção.</span>
+          Clique num estado ou seta para editar aqui.
+        </div>
+
+        <!-- estado -->
+        <div *ngIf="selState as s">
+          <div class="pgroup-label">Estado</div>
+          <label class="lbl">Nome</label>
+          <input class="inp" type="text" [ngModel]="s.name" (ngModelChange)="rename($event)" autocomplete="off" spellcheck="false">
+          <label class="lbl">Papel</label>
+          <div class="toggle-row">
+            <button class="toggle" [class.on-init]="s.initial" (click)="toggleInitial()">Inicial</button>
+            <button class="toggle" [class.on-accept]="s.accepting" (click)="toggleAccepting()">Aceitação</button>
+          </div>
+          <div class="pgroup-label mt">Transições de saída</div>
+          <div class="outs empty-note" *ngIf="!outsOf(s.id).length">nenhuma ainda</div>
+          <div class="outs" *ngFor="let o of outsOf(s.id)"><span class="mono">{{ o.syms }} → {{ o.to }}</span></div>
+          <button class="danger" (click)="deleteSelected()">Excluir estado</button>
+        </div>
+
+        <!-- aresta -->
+        <div *ngIf="selEdge as e">
+          <div class="pgroup-label">Transição</div>
+          <div class="mono edge-desc" *ngIf="edgeEndpoints() as ep">{{ ep.from }} → {{ ep.to }}</div>
+          <label class="lbl">Símbolos</label>
+          <div class="toggle-row">
+            <button *ngFor="let sym of pickerSyms" class="toggle" [class.on-init]="e.symbols.includes(sym)" (click)="toggleEdgeSym(sym)">{{ sym }}</button>
+          </div>
+          <button class="danger" (click)="deleteSelected()">Excluir transição</button>
+        </div>
+
+        <!-- múltiplos -->
+        <div *ngIf="multi.length && !selState">
+          <div class="pgroup-label">Seleção múltipla</div>
+          <div class="mono" style="font-size:13px">{{ multi.length }} estado(s) selecionado(s)</div>
+          <div class="empty-note" style="margin-top:8px">Arraste na tela (modo Selecionar) para pegar mais, ou clique num estado para tirá-lo. Ctrl/Cmd+A seleciona tudo.</div>
+          <button class="danger" (click)="deleteSelected()">Excluir selecionados</button>
+        </div>
+      </div>
+
+      <!-- ANÁLISE -->
+      <div class="panel" *ngIf="tab==='analise'">
+        <div class="pgroup-label">{{ space==='afd' ? 'Determinismo' : 'Estrutura do AFN' }}</div>
+        <div class="check-summary" *ngIf="space==='afd'">
+          {{ issues.length ? issues.length + ' ponto(s) a resolver:' : 'Estrutura válida como AFD.' }}
+        </div>
+        <div class="check-summary" *ngIf="space==='afn'">
+          No AFN, várias saídas por símbolo e transições-ε são permitidas. Use <b>Determinizar</b> para obter o AFD equivalente.
+        </div>
+        <div class="check-item ok" *ngIf="space==='afd' && !issues.length"><span class="dot"></span><span>Todo estado tem exatamente uma saída por símbolo.</span></div>
+        <div class="check-item warn" *ngFor="let it of issues"><span class="dot"></span><span>{{ it.message }}</span></div>
+
+        <div class="rule" *ngIf="space==='afd'">Um AFD exige, de <b>cada</b> estado, exatamente <b>uma</b> saída por símbolo — nem zero, nem duas. Setas <em>chegando</em> são livres.</div>
+        <div class="rule" *ngIf="space==='afn'">O AFN aceita uma palavra quando <b>algum</b> caminho termina em estado de aceitação. A transição-ε (tracejada) salta sem consumir símbolo.</div>
+
+        <button class="det-btn" *ngIf="space==='afn'" (click)="openDeterminize()">Determinizar (AFN → AFD)</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SIMULAR -->
+<div class="overlay" *ngIf="simModal">
+  <div class="modal">
+    <div class="modal-head"><h3>Simular uma palavra</h3><button class="xbtn" (click)="closeSim()">&times;</button></div>
+    <div class="modal-body">
+      <p class="modal-note">
+        {{ space==='afd' ? 'A palavra corre um caminho único e mostra o traço estado a estado.' : 'No AFN mostramos o CONJUNTO de estados possíveis a cada símbolo (com fecho-ε). Aceita se algum estado final é de aceitação.' }}
+      </p>
+      <input class="inp mono" type="text" [(ngModel)]="simWord" (keydown.enter)="runSim()" placeholder="ex.: 0101" autocomplete="off" spellcheck="false" style="font-size:15px">
+      <div class="sim-out" [innerHTML]="simHtml"></div>
+    </div>
+    <div class="modal-foot"><button class="tbtn" (click)="closeSim()">Fechar</button><button class="tbtn primary" (click)="runSim()">Rodar</button></div>
+  </div>
+</div>
+
+<!-- DETERMINIZAÇÃO -->
+<div class="overlay" *ngIf="detModal && det">
+  <div class="modal">
+    <div class="modal-head"><h3>Determinização — construção de subconjuntos</h3><button class="xbtn" (click)="closeDet()">&times;</button></div>
+    <div class="modal-body">
+      <p class="modal-note">Cada linha é um subconjunto de estados do AFN (→ inicial, ✱ aceitação). Lendo um símbolo, vamos para o fecho-ε do conjunto alcançado. Isso vira um estado do AFD.</p>
+      <div class="tablewrap">
+        <table class="dtable">
+          <thead><tr><th>Subconjunto</th><th *ngFor="let s of det.syms">{{ s }}</th></tr></thead>
+          <tbody>
+            <tr *ngFor="let r of det.rows" [class.acc]="det.subsets[r.from].accepting">
+              <td class="sub">
+                <span class="mk" *ngIf="r.from===0">→ </span>{{ det.subsets[r.from].name || '∅' }}<span class="mk" *ngIf="det.subsets[r.from].accepting"> ✱</span>
+              </td>
+              <td *ngFor="let s of det.syms">{{ det.subsets[r.on[s]].name || '∅' }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <svg class="det-svg" *ngIf="detPreview() as pv" [attr.viewBox]="pv.viewBox" preserveAspectRatio="xMidYMid meet">
+        <defs><marker id="ah2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" class="edge-arrowhead"></path></marker></defs>
+        <ng-container *ngFor="let e of pv.edges">
+          <path [attr.d]="e.d" class="edge" marker-end="url(#ah2)"></path>
+          <rect class="edge-label-bg" [attr.x]="e.lx - e.labelW/2" [attr.y]="e.ly - 8" [attr.width]="e.labelW" height="15" rx="3"></rect>
+          <text class="edge-label" [attr.x]="e.lx" [attr.y]="e.ly + 4" text-anchor="middle">{{ e.label }}</text>
+        </ng-container>
+        <path *ngIf="pv.start" class="start-arrow" marker-end="url(#ah2)" [attr.d]="'M ' + pv.start.x1 + ' ' + pv.start.y1 + ' L ' + pv.start.x2 + ' ' + pv.start.y2"></path>
+        <g *ngFor="let n of pv.nodes" class="st-node">
+          <ng-container *ngIf="n.accepting; else plain2">
+            <circle [attr.cx]="n.x" [attr.cy]="n.y" [attr.r]="28" class="st-accept"></circle>
+            <circle [attr.cx]="n.x" [attr.cy]="n.y" [attr.r]="23" class="st-accept-ring"></circle>
+          </ng-container>
+          <ng-template #plain2><circle [attr.cx]="n.x" [attr.cy]="n.y" [attr.r]="28" class="st-normal"></circle></ng-template>
+          <text class="st-label" [attr.x]="n.x" [attr.y]="n.y + 4.5" text-anchor="middle">{{ n.name }}</text>
+        </g>
+      </svg>
+    </div>
+    <div class="modal-foot">
+      <button class="tbtn" (click)="closeDet()">Fechar</button>
+      <button class="tbtn primary" (click)="applyDet()">Abrir resultado no espaço AFD</button>
+    </div>
+  </div>
+</div>
+
+<!-- EXPORT / IMPORT -->
+<div class="overlay" *ngIf="ioModal">
+  <div class="modal">
+    <div class="modal-head"><h3>{{ ioModal==='export' ? 'Exportar autômato' : 'Importar autômato' }}</h3><button class="xbtn" (click)="closeIo()">&times;</button></div>
+    <div class="modal-body">
+      <p class="modal-note">{{ ioModal==='export' ? 'Copie este JSON para guardar ou enviar. Ele carrega no espaço certo pelo campo kind.' : 'Cole um autômato exportado por esta bancada.' }}</p>
+      <textarea class="code" [(ngModel)]="ioText" spellcheck="false" [readonly]="ioModal==='export'"></textarea>
+    </div>
+    <div class="modal-foot">
+      <button class="tbtn" (click)="closeIo()">Fechar</button>
+      <button class="tbtn primary" *ngIf="ioModal==='import'" (click)="doImport()">Importar</button>
+    </div>
+  </div>
+</div>
+
+<!-- BIBLIOTECA -->
+<div class="overlay" *ngIf="libModal">
+  <div class="modal">
+    <div class="modal-head"><h3>Biblioteca de autômatos</h3><button class="xbtn" (click)="closeLibrary()">&times;</button></div>
+    <div class="modal-body">
+      <p class="modal-note">Autômatos salvos no servidor (Postgres 54327). Salve o atual ou abra um já guardado.</p>
+      <div class="lib-error" *ngIf="libError">{{ libError }}</div>
+      <div class="empty-note" *ngIf="!libError && !library.length">Nada salvo ainda.</div>
+      <div class="lib-item" *ngFor="let a of library" (click)="loadSaved(a)">
+        <span class="lib-kind mono" [attr.data-k]="a.kind">{{ a.kind==='afd' ? 'AFD' : 'AFN' }}</span>
+        <div class="lib-main">
+          <div class="lib-name">{{ a.name }}</div>
+          <div class="lib-meta mono">{{ a.stateCount }} estados</div>
+        </div>
+        <button class="lib-del" (click)="deleteSaved(a, $event)" title="Excluir">&times;</button>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="tbtn" (click)="closeLibrary()">Fechar</button>
+      <button class="tbtn primary" (click)="saveCurrent()">Salvar {{ space==='afd' ? 'AFD' : 'AFN' }} atual</button>
+    </div>
+  </div>
+</div>

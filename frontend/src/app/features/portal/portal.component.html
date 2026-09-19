@@ -1,0 +1,64 @@
+<div class="portal">
+  <div class="portal-top">
+    <div class="wordmark">
+      <svg class="glyph" viewBox="0 0 26 26" aria-hidden="true">
+        <circle cx="9" cy="13" r="6.2" fill="none" stroke="currentColor" stroke-width="2"></circle>
+        <circle cx="9" cy="13" r="3.2" fill="none" stroke="currentColor" stroke-width="1.4"></circle>
+        <path d="M15.5 13H23" stroke="currentColor" stroke-width="2"></path>
+        <path d="M20 10.5L23 13l-3 2.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+      </svg>
+      <div class="txt">BANCADA DE AUTÔMATOS<small>Linguagens Formais · Σ = &#123;0, 1&#125;</small></div>
+    </div>
+    <button class="theme" (click)="theme.toggle()" title="Alternar tema" aria-label="Alternar tema">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8z"></path></svg>
+    </button>
+  </div>
+
+  <div class="portal-lead">
+    <div class="eyebrow">Ambiente de estudo · Linguagens Formais</div>
+    <h1>Monte, simule e <em>determinize</em> autômatos finitos.</h1>
+    <p class="sub">Dois espaços de trabalho sobre o mesmo alfabeto Σ = &#123;0, 1&#125;: um para autômatos determinísticos, outro para não determinísticos com fecho-ε e conversão para AFD.</p>
+  </div>
+
+  <div class="diptych">
+    <button class="choice afd" (click)="enter('afd')">
+      <svg class="diagram-mini" width="120" height="60" viewBox="0 0 120 60" fill="none" stroke="currentColor" stroke-width="1.6">
+        <circle cx="20" cy="30" r="12"></circle><circle cx="70" cy="30" r="12"></circle><circle cx="100" cy="30" r="12"></circle><circle cx="100" cy="30" r="8.5"></circle>
+        <path d="M33 28 H57" marker-end="url(#pa)"></path><path d="M83 28 H87" marker-end="url(#pa)"></path>
+        <defs><marker id="pa" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0L10 5L0 10z" fill="currentColor"></path></marker></defs>
+      </svg>
+      <div class="idx">01 — Cada símbolo, uma saída</div>
+      <div>
+        <div class="big">Determinístico</div>
+        <div class="desc">O caminho é único: de cada estado sai exatamente uma seta por símbolo. Monte AFDs e simule palavra a palavra.</div>
+      </div>
+      <span class="go">Abrir espaço
+        <svg width="20" height="14" viewBox="0 0 24 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 7h19"></path><path d="M15 1l6 6-6 6"></path></svg>
+      </span>
+    </button>
+
+    <button class="choice afn" (click)="enter('afn')">
+      <svg class="diagram-mini" width="120" height="66" viewBox="0 0 120 66" fill="none" stroke="currentColor" stroke-width="1.6">
+        <circle cx="20" cy="20" r="12"></circle><circle cx="80" cy="12" r="11"></circle><circle cx="80" cy="52" r="11"></circle>
+        <path d="M32 17 L69 13" marker-end="url(#pb)"></path><path d="M31 25 L69 49" marker-end="url(#pb)"></path>
+        <defs><marker id="pb" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0L10 5L0 10z" fill="currentColor"></path></marker></defs>
+      </svg>
+      <div class="idx">02 — Vários caminhos, fecho-ε</div>
+      <div>
+        <div class="big">Não determinístico</div>
+        <div class="desc">Um símbolo pode abrir vários caminhos, e transições-ε saltam de graça. Monte AFNs e converta para AFD por subconjuntos.</div>
+      </div>
+      <span class="go">Abrir espaço
+        <svg width="20" height="14" viewBox="0 0 24 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 7h19"></path><path d="M15 1l6 6-6 6"></path></svg>
+      </span>
+    </button>
+  </div>
+
+  <div class="portal-foot" aria-hidden="true">
+    <span><b>AFD</b> determinístico</span>
+    <span><b>AFN</b> não determinístico</span>
+    <span><b>ε</b> fecho / transição vazia</span>
+    <span><b>→</b> construção de subconjuntos</span>
+    <span><b>Σ</b> = &#123;0, 1&#125;</span>
+  </div>
+</div>
