@@ -57,7 +57,13 @@ export function realSymbols(model: AutomatonModel): string[] {
  */
 export function parseAlphabet(text: string): string[] | { error: string } {
   const raw = text.includes(',') ? text.split(',') : [...text];
-  const syms = raw.map((s) => s.trim()).filter((s) => s.length);
+  return validateAlphabet(raw.map((s) => s.trim()).filter((s) => s.length));
+}
+
+/** Valida uma lista de símbolos já separada (ex.: vinda de JSON importado). */
+export function validateAlphabet(input: unknown[]): string[] | { error: string } {
+  if (input.some((s) => typeof s !== 'string')) return { error: 'Os símbolos de Σ devem ser textos.' };
+  const syms = input as string[];
   if (!syms.length) return { error: 'O alfabeto precisa de pelo menos um símbolo.' };
   if (syms.length > 10) return { error: 'Use no máximo 10 símbolos.' };
   for (const s of syms) {
