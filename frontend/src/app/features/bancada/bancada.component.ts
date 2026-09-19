@@ -18,10 +18,31 @@ import { computeLayout, Layout, R } from '../../domain/render';
 type Mode = 'idle' | 'addState' | 'addTrans' | 'select';
 const STORAGE = 'bancada-aut-v2';
 
-/** Lê um autômato de JSON importado; lança Error com mensagem legível se inválido. */
+const isFiniteNum = (v: unknown) => typeof v === 'number' && Number.isFinite(v);
+
+/**
+ * Lê um autômato de JSON importado; lança Error com mensagem legível se inválido.
+ * Confere a forma de cada estado e transição: o JSON vem de fora e um campo
+ * errado quebraria o desenho ou a simulação só mais tarde, longe da causa.
+ */
 function readModel(data: unknown): AutomatonModel {
   const d = data as Partial<AutomatonModel> | null;
   if (!d || !Array.isArray(d.states) || !Array.isArray(d.transitions)) throw new Error('faltam "states" e "transitions".');
+  const ids = new Set<string>();
+  for (const [i, st] of d.states.entries()) {
+    const ok = st && typeof st.id === 'string' && typeof st.name === 'string'
+      && typeof st.initial === 'boolean' && typeof st.accepting === 'boolean'
+      && isFiniteNum(st.x) && isFiniteNum(st.y);
+    if (!ok) throw new Error(`estado ${i + 1} precisa de id, name, initial, accepting, x e y válidos.`);
+    if (ids.has(st.id)) throw new Error(`id de estado repetido: "${st.id}".`);
+    ids.add(st.id);
+  }
+  for (const [i, t] of d.transitions.entries()) {
+    const ok = t && typeof t.from === 'string' && typeof t.to === 'string'
+      && Array.isArray(t.symbols) && t.symbols.every((x: unknown) => typeof x === 'string');
+    if (!ok) throw new Error(`transição ${i + 1} precisa de from, to e symbols (lista de textos).`);
+    if (!ids.has(t.from) || !ids.has(t.to)) throw new Error(`transição ${i + 1} liga um estado que não existe.`);
+  }
   const kind: AutomatonKind = d.kind === 'afn' ? 'afn' : 'afd';
   let alphabet: string[] | undefined;
   if (d.alphabet !== undefined) {
@@ -150,17 +171,19 @@ export class BancadaComponent implements OnInit {
 
   // ---------- alfabeto ----------
   /**
-   * Troca Σ do autômato ativo. Símbolos removidos deixam de existir, então são
-   * tirados das transições (com confirmação, pois apaga setas).
+   * Troca Σ do autômato ativo. Todo símbolo de transição fora do novo Σ (os
+   * removidos agora e os que já estavam fora, ex.: vindos de import) é tirado
+   * das setas, com confirmação, pois apaga setas. ε não é símbolo de Σ e fica.
    */
   applyAlphabet(text: string): void {
     const parsed = parseAlphabet(text);
     if ('error' in parsed) { this.alphabetError = parsed.error; return; }
     this.alphabetError = '';
-    const removed = this.sigma.filter((s) => !parsed.includes(s));
-    const affected = this.model.transitions.filter((t) => t.symbols.some((s) => removed.includes(s)));
+    const outside = (s: string) => s !== EPS && !parsed.includes(s);
+    const affected = this.model.transitions.filter((t) => t.symbols.some(outside));
+    const removed = [...new Set(affected.flatMap((t) => t.symbols.filter(outside)))];
     if (affected.length && !confirm(`Remover ${removed.join(', ')} de Σ apaga esse(s) símbolo(s) de ${affected.length} transição(ões). Continuar?`)) return;
-    for (const t of affected) t.symbols = t.symbols.filter((s) => !removed.includes(s));
+    for (const t of affected) t.symbols = t.symbols.filter((s) => !outside(s));
     this.model.transitions = this.model.transitions.filter((t) => t.symbols.length);
     this.model.alphabet = parsed;
     this.selectedEdge = null;
