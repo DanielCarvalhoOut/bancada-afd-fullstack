@@ -4,7 +4,7 @@
  */
 import { strict as assert } from 'node:assert';
 import {
-  AutomatonModel, EPS, equivalence, parseAlphabet, simulateNfa,
+  AutomatonModel, EPS, equivalence, parseAlphabet, simulateNfa, validateAlphabet,
 } from '../src/domain/automaton';
 
 function acceptsAny(m: AutomatonModel, w: string): boolean {
@@ -72,5 +72,8 @@ assert.ok('error' in (parseAlphabet('a, bb') as object));
 assert.ok('error' in (parseAlphabet('a,a') as object));
 assert.ok('error' in (parseAlphabet(`a,${EPS}`) as object));
 assert.ok('error' in (parseAlphabet(' ') as object));
+assert.ok('error' in (validateAlphabet(['ab']) as object), 'lista de um item com 2 caracteres');
+assert.ok('error' in (validateAlphabet([1]) as object));
+assert.deepEqual(validateAlphabet(['a', 'b']), ['a', 'b']);
 
 console.log('automaton.check: ok');

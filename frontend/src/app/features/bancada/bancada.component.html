@@ -244,12 +244,16 @@
   <div class="modal">
     <div class="modal-head"><h3>{{ ioModal==='export' ? 'Exportar autômato' : 'Importar autômato' }}</h3><button class="xbtn" (click)="closeIo()">&times;</button></div>
     <div class="modal-body">
-      <p class="modal-note">{{ ioModal==='export' ? 'Copie este JSON para guardar ou enviar. Ele carrega no espaço certo pelo campo kind.' : 'Cole um autômato exportado por esta bancada.' }}</p>
-      <textarea class="code" [(ngModel)]="ioText" spellcheck="false" [readonly]="ioModal==='export'"></textarea>
+      <p class="modal-note">{{ ioModal==='export' ? 'Copie este JSON para guardar ou enviar. Ele carrega no espaço certo pelo campo kind.' : 'Cole (ou escolha o arquivo de) um autômato exportado por esta bancada — ele abre aqui — ou uma lista de autômatos [{ name, kind, model }], que é gravada inteira na Biblioteca.' }}</p>
+      <label class="tbtn file-pick" *ngIf="ioModal==='import'">Escolher arquivo .json
+        <input type="file" accept=".json,application/json" hidden (change)="pickImportFile(fileInp)" #fileInp>
+      </label>
+      <textarea class="code" [(ngModel)]="ioText" spellcheck="false" [readonly]="ioModal==='export'" aria-label="JSON"></textarea>
+      <div class="import-msg" *ngIf="ioMsg" role="status">{{ ioMsg }}</div>
     </div>
     <div class="modal-foot">
       <button class="tbtn" (click)="closeIo()">Fechar</button>
-      <button class="tbtn primary" *ngIf="ioModal==='import'" (click)="doImport()">Importar</button>
+      <button class="tbtn primary" *ngIf="ioModal==='import'" (click)="doImport()" [disabled]="importing || !ioText.trim()">Importar</button>
     </div>
   </div>
 </div>

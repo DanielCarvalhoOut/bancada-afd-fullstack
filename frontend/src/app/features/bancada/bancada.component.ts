@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, ElementRef, HostListener, OnInit, ViewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
+import { firstValueFrom } from 'rxjs';
 import { AutomataService } from '../../core/services/automata.service';
 import { EditorStateService } from '../../core/services/editor-state.service';
 import { ThemeService } from '../../core/services/theme.service';
@@ -10,12 +11,26 @@ import {
 } from '../../core/models/api.model';
 import {
   EPS, determinize as localDeterminize, determinismIssues,
-  getState, parseAlphabet, realSymbols, simulateNfa, trace as localTrace,
+  getState, parseAlphabet, realSymbols, simulateNfa, trace as localTrace, validateAlphabet,
 } from '../../domain/automaton';
 import { computeLayout, Layout, R } from '../../domain/render';
 
 type Mode = 'idle' | 'addState' | 'addTrans' | 'select';
 const STORAGE = 'bancada-aut-v2';
+
+/** Lê um autômato de JSON importado; lança Error com mensagem legível se inválido. */
+function readModel(data: unknown): AutomatonModel {
+  const d = data as Partial<AutomatonModel> | null;
+  if (!d || !Array.isArray(d.states) || !Array.isArray(d.transitions)) throw new Error('faltam "states" e "transitions".');
+  const kind: AutomatonKind = d.kind === 'afn' ? 'afn' : 'afd';
+  let alphabet: string[] | undefined;
+  if (d.alphabet !== undefined) {
+    const parsed = Array.isArray(d.alphabet) ? validateAlphabet(d.alphabet) : { error: '"alphabet" deve ser uma lista.' };
+    if ('error' in parsed) throw new Error(parsed.error);
+    alphabet = parsed;
+  }
+  return { kind, alphabet, states: d.states, transitions: d.transitions };
+}
 
 function emptyPair(): Record<AutomatonKind, AutomatonModel> {
   return { afd: { kind: 'afd', states: [], transitions: [] }, afn: { kind: 'afn', states: [], transitions: [] } };
@@ -55,6 +70,8 @@ export class BancadaComponent implements OnInit {
   det: Determinization | null = null;
   ioModal: 'export' | 'import' | null = null;
   ioText = '';
+  ioMsg = '';
+  importing = false;
   libModal = false;
   library: SavedAutomaton[] = [];
   libError = '';
@@ -420,24 +437,66 @@ export class BancadaComponent implements OnInit {
 
   // ---------- export / import ----------
   openExport(): void { this.ioModal = 'export'; this.ioText = JSON.stringify({ kind: this.space, alphabet: this.sigma, states: this.model.states, transitions: this.model.transitions }, null, 2); }
-  openImport(): void { this.ioModal = 'import'; this.ioText = ''; }
-  closeIo(): void { this.ioModal = null; }
+  openImport(): void { this.ioModal = 'import'; this.ioText = ''; this.ioMsg = ''; }
+  closeIo(): void { if (!this.importing) this.ioModal = null; }
+
+  /** Carrega um arquivo .json escolhido pelo usuário na caixa de texto. */
+  async pickImportFile(input: HTMLInputElement): Promise<void> {
+    const file = input.files?.[0];
+    if (file) this.ioText = await file.text();
+    input.value = '';
+  }
+
+  /**
+   * Aceita dois formatos:
+   * - um autômato exportado ({ kind, alphabet, states, transitions }) → abre na bancada;
+   * - uma lista de salvos ([{ name, kind, model }], a Biblioteca exportada) → grava
+   *   cada um na Biblioteca, pulando nomes que já existem (reimportar não duplica).
+   */
   doImport(): void {
+    let data: unknown;
+    try { data = JSON.parse(this.ioText); } catch { this.ioMsg = 'JSON inválido: confira se colou o arquivo inteiro.'; return; }
+    if (Array.isArray(data)) { void this.importList(data); return; }
     try {
-      const data = JSON.parse(this.ioText);
-      if (!Array.isArray(data.states) || !Array.isArray(data.transitions)) throw new Error('formato');
-      const kind: AutomatonKind = data.kind === 'afn' ? 'afn' : 'afd';
-      let alphabet: string[] | undefined;
-      if (data.alphabet !== undefined) {
-        const parsed = Array.isArray(data.alphabet) ? parseAlphabet(data.alphabet.join(',')) : { error: 'alphabet' };
-        if ('error' in parsed) throw new Error(parsed.error);
-        alphabet = parsed;
-      }
-      this.automata[kind] = { kind, alphabet, states: data.states, transitions: data.transitions };
-      if (kind !== this.space) this.switchSpace(kind); else { this.reset(); this.fit(); }
+      const model = readModel(data);
+      this.automata[model.kind!] = model;
+      if (model.kind !== this.space) this.switchSpace(model.kind!); else { this.reset(); this.fit(); }
       this.ioModal = null; this.touch();
+    } catch (e) {
+      this.ioMsg = `Autômato inválido: ${(e as Error).message}`;
+    }
+  }
+
+  private async importList(items: unknown[]): Promise<void> {
+    // Valida tudo antes de gravar qualquer coisa: lista com erro não entra pela metade.
+    const entries: { name: string; model: AutomatonModel }[] = [];
+    for (const [i, it] of items.entries()) {
+      const rec = it as { name?: unknown; kind?: unknown; model?: unknown };
+      const name = typeof rec?.name === 'string' ? rec.name.trim().slice(0, 120) : '';
+      if (!name) { this.ioMsg = `Item ${i + 1}: falta o campo "name".`; return; }
+      try {
+        entries.push({ name, model: readModel({ ...(rec.model as object), kind: rec.kind ?? (rec.model as { kind?: unknown })?.kind }) });
+      } catch (e) {
+        this.ioMsg = `Item ${i + 1} (“${name}”): ${(e as Error).message}`; return;
+      }
+    }
+    this.importing = true;
+    this.ioMsg = `Importando ${entries.length} autômato(s)…`;
+    try {
+      const existing = new Set((await firstValueFrom(this.automataSvc.list())).map((a) => a.name));
+      let created = 0, skipped = 0;
+      for (const e of entries) {
+        if (existing.has(e.name)) { skipped++; continue; }
+        await firstValueFrom(this.automataSvc.create(e.name, e.model.kind!, e.model));
+        existing.add(e.name);
+        created++;
+      }
+      this.ioMsg = `${created} gravado(s) na Biblioteca` + (skipped ? `, ${skipped} já existia(m) e foi(ram) pulado(s).` : '.');
+      this.ioText = '';
     } catch {
-      alert('JSON inválido. Cole um autômato exportado por esta bancada.');
+      this.ioMsg = 'Falha ao gravar na Biblioteca — confira se a API (porta 3000) e o Postgres estão no ar. O que já foi gravado fica; reimportar pula os repetidos.';
+    } finally {
+      this.importing = false;
     }
   }
 
