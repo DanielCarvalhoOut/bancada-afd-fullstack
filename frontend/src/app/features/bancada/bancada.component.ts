@@ -6,11 +6,11 @@ import { AutomataService } from '../../core/services/automata.service';
 import { EditorStateService } from '../../core/services/editor-state.service';
 import { ThemeService } from '../../core/services/theme.service';
 import {
-  AutomatonKind, AutomatonModel, Determinization, SavedAutomaton,
+  AutomatonKind, AutomatonModel, Comparison, Determinization, SavedAutomaton,
 } from '../../core/models/api.model';
 import {
-  ALPHABET, EPS, determinize as localDeterminize, determinismIssues,
-  getState, realSymbols, simulateNfa, trace as localTrace,
+  EPS, determinize as localDeterminize, determinismIssues,
+  getState, parseAlphabet, realSymbols, simulateNfa, trace as localTrace,
 } from '../../domain/automaton';
 import { computeLayout, Layout, R } from '../../domain/render';
 
@@ -58,6 +58,9 @@ export class BancadaComponent implements OnInit {
   libModal = false;
   library: SavedAutomaton[] = [];
   libError = '';
+  cmp: Comparison | null = null;
+  cmpError = '';
+  alphabetError = '';
 
   private drag: { id: string; dx: number; dy: number } | null = null;
   private marquee: { x1: number; y1: number; x2: number; y2: number } | null = null;
@@ -96,8 +99,8 @@ export class BancadaComponent implements OnInit {
       const data = JSON.parse(raw);
       if (data?.afd && data?.afn) {
         this.automata = {
-          afd: { kind: 'afd', states: data.afd.states ?? [], transitions: data.afd.transitions ?? [] },
-          afn: { kind: 'afn', states: data.afn.states ?? [], transitions: data.afn.transitions ?? [] },
+          afd: { kind: 'afd', alphabet: data.afd.alphabet, states: data.afd.states ?? [], transitions: data.afd.transitions ?? [] },
+          afn: { kind: 'afn', alphabet: data.afn.alphabet, states: data.afn.states ?? [], transitions: data.afn.transitions ?? [] },
         };
       }
     } catch { /* ignora */ }
@@ -125,6 +128,26 @@ export class BancadaComponent implements OnInit {
   private reset(): void {
     this.selected = null; this.selectedEdge = null; this.pendingFrom = null;
     this.multi = []; this.active = []; this.mode = 'idle'; this.picker = null;
+    this.alphabetError = '';
+  }
+
+  // ---------- alfabeto ----------
+  /**
+   * Troca Σ do autômato ativo. Símbolos removidos deixam de existir, então são
+   * tirados das transições (com confirmação, pois apaga setas).
+   */
+  applyAlphabet(text: string): void {
+    const parsed = parseAlphabet(text);
+    if ('error' in parsed) { this.alphabetError = parsed.error; return; }
+    this.alphabetError = '';
+    const removed = this.sigma.filter((s) => !parsed.includes(s));
+    const affected = this.model.transitions.filter((t) => t.symbols.some((s) => removed.includes(s)));
+    if (affected.length && !confirm(`Remover ${removed.join(', ')} de Σ apaga esse(s) símbolo(s) de ${affected.length} transição(ões). Continuar?`)) return;
+    for (const t of affected) t.symbols = t.symbols.filter((s) => !removed.includes(s));
+    this.model.transitions = this.model.transitions.filter((t) => t.symbols.length);
+    this.model.alphabet = parsed;
+    this.selectedEdge = null;
+    this.touch();
   }
 
   // ---------- layout ----------
@@ -144,7 +167,10 @@ export class BancadaComponent implements OnInit {
     return { x: Math.min(m.x1, m.x2), y: Math.min(m.y1, m.y2), w: Math.abs(m.x2 - m.x1), h: Math.abs(m.y2 - m.y1) };
   }
   get issues() { return determinismIssues(this.model); }
-  get pickerSyms(): string[] { return this.space === 'afn' ? [...ALPHABET, EPS] : [...ALPHABET]; }
+  get sigma(): string[] { return realSymbols(this.model); }
+  get pickerSyms(): string[] { return this.space === 'afn' ? [...this.sigma, EPS] : this.sigma; }
+  /** No AFN o painel não lista problemas de determinismo, só símbolos fora de Σ. */
+  get foreignIssues() { return this.issues.filter((i) => i.kind === 'foreign'); }
   get hint(): string {
     switch (this.mode) {
       case 'addState': return 'Clique na tela para posicionar um estado.';
@@ -343,7 +369,6 @@ export class BancadaComponent implements OnInit {
   closeSim(): void { this.simModal = false; this.active = []; }
   runSim(): void {
     const w = this.simWord.trim();
-    for (const c of w) if (!realSymbols().includes(c)) { this.simHtml = `<p class="verdict no">Símbolo inválido: “${c}”. Use só 0 e 1.</p>`; return; }
     if (this.space === 'afd') {
       const r = localTrace(this.model, w);
       if ('error' in r) { this.simHtml = `<p class="verdict no">${r.error}</p>`; return; }
@@ -387,14 +412,14 @@ export class BancadaComponent implements OnInit {
   }
   applyDet(): void {
     if (!this.det) return;
-    this.automata.afd = { kind: 'afd', states: JSON.parse(JSON.stringify(this.det.afd.states)), transitions: JSON.parse(JSON.stringify(this.det.afd.transitions)) };
+    this.automata.afd = { kind: 'afd', ...JSON.parse(JSON.stringify(this.det.afd)) };
     this.detModal = false;
     this.switchSpace('afd');
     this.touch();
   }
 
   // ---------- export / import ----------
-  openExport(): void { this.ioModal = 'export'; this.ioText = JSON.stringify({ kind: this.space, states: this.model.states, transitions: this.model.transitions }, null, 2); }
+  openExport(): void { this.ioModal = 'export'; this.ioText = JSON.stringify({ kind: this.space, alphabet: this.sigma, states: this.model.states, transitions: this.model.transitions }, null, 2); }
   openImport(): void { this.ioModal = 'import'; this.ioText = ''; }
   closeIo(): void { this.ioModal = null; }
   doImport(): void {
@@ -402,7 +427,13 @@ export class BancadaComponent implements OnInit {
       const data = JSON.parse(this.ioText);
       if (!Array.isArray(data.states) || !Array.isArray(data.transitions)) throw new Error('formato');
       const kind: AutomatonKind = data.kind === 'afn' ? 'afn' : 'afd';
-      this.automata[kind] = { kind, states: data.states, transitions: data.transitions };
+      let alphabet: string[] | undefined;
+      if (data.alphabet !== undefined) {
+        const parsed = Array.isArray(data.alphabet) ? parseAlphabet(data.alphabet.join(',')) : { error: 'alphabet' };
+        if ('error' in parsed) throw new Error(parsed.error);
+        alphabet = parsed;
+      }
+      this.automata[kind] = { kind, alphabet, states: data.states, transitions: data.transitions };
       if (kind !== this.space) this.switchSpace(kind); else { this.reset(); this.fit(); }
       this.ioModal = null; this.touch();
     } catch {
@@ -433,6 +464,26 @@ export class BancadaComponent implements OnInit {
     if (a.kind !== this.space) this.switchSpace(a.kind); else { this.reset(); this.fit(); }
     this.touch();
   }
+  /** Compara o autômato ativo com um salvo (gabarito) no servidor. */
+  compareWith(a: SavedAutomaton, ev: Event): void {
+    ev.stopPropagation();
+    this.cmp = null; this.cmpError = '';
+    this.automataSvc.compare(a.id, this.model).subscribe({
+      next: (r) => { this.cmp = r; this.libModal = false; },
+      error: (e) => { this.cmpError = e?.error?.message ?? 'Não foi possível comparar — backend offline.'; this.libModal = false; },
+    });
+  }
+  closeCmp(): void { this.cmp = null; this.cmpError = ''; }
+  /** Abre a simulação já com a palavra que distingue os dois autômatos. */
+  simulateWitness(): void {
+    if (!this.cmp || this.cmp.equivalent) return;
+    const w = this.cmp.witness;
+    this.closeCmp();
+    this.openSim();
+    this.simWord = w;
+    this.runSim();
+  }
+
   deleteSaved(a: SavedAutomaton, ev: Event): void {
     ev.stopPropagation();
     this.automataSvc.remove(a.id).subscribe({ next: () => this.refreshLibrary(), error: () => this.refreshLibrary() });

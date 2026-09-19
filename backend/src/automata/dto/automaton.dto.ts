@@ -1,7 +1,7 @@
 import { Type } from 'class-transformer';
 import {
-  IsArray, IsBoolean, IsIn, IsInt, IsOptional, IsString,
-  MaxLength, ValidateNested,
+  ArrayMaxSize, ArrayMinSize, ArrayUnique, IsArray, IsBoolean, IsIn, IsInt,
+  IsOptional, IsString, Matches, MaxLength, ValidateNested,
 } from 'class-validator';
 import { AutomatonKind } from '../../domain/automaton';
 
@@ -23,6 +23,11 @@ export class TransitionDto {
 export class AutomatonModelDto {
   @IsOptional() @IsIn(['afd', 'afn'])
   kind?: AutomatonKind;
+
+  /** Σ: 1 a 10 símbolos de um caractere cada, sem repetição e sem ε. */
+  @IsOptional() @IsArray() @ArrayMinSize(1) @ArrayMaxSize(10) @ArrayUnique()
+  @Matches(/^[^\sε]$/u, { each: true, message: 'cada símbolo de Σ deve ser um único caractere (e não ε)' })
+  alphabet?: string[];
 
   @IsArray() @ValidateNested({ each: true }) @Type(() => StateDto)
   states: StateDto[];
@@ -53,6 +58,12 @@ export class UpdateAutomatonDto {
 
 /** Corpo de POST /automata/determinize: um AFN a converter. */
 export class DeterminizeDto {
+  @ValidateNested() @Type(() => AutomatonModelDto)
+  model: AutomatonModelDto;
+}
+
+/** Corpo de POST /automata/:id/compare: o autômato a comparar com o salvo. */
+export class CompareDto {
   @ValidateNested() @Type(() => AutomatonModelDto)
   model: AutomatonModelDto;
 }

@@ -153,6 +153,13 @@
 
       <!-- ANÁLISE -->
       <div class="panel" *ngIf="tab==='analise'">
+        <div class="pgroup-label">Alfabeto Σ</div>
+        <input class="inp" type="text" [value]="sigma.join(', ')" #sigmaInp
+               (keydown.enter)="applyAlphabet(sigmaInp.value)" (blur)="applyAlphabet(sigmaInp.value)"
+               aria-label="Alfabeto" autocomplete="off" spellcheck="false">
+        <div class="empty-note sigma-note">Símbolos de um caractere, separados por vírgula (ex.: a, b, c). Enter aplica.</div>
+        <div class="lib-error" *ngIf="alphabetError">{{ alphabetError }}</div>
+
         <div class="pgroup-label">{{ space==='afd' ? 'Determinismo' : 'Estrutura do AFN' }}</div>
         <div class="check-summary" *ngIf="space==='afd'">
           {{ issues.length ? issues.length + ' ponto(s) a resolver:' : 'Estrutura válida como AFD.' }}
@@ -161,7 +168,7 @@
           No AFN, várias saídas por símbolo e transições-ε são permitidas. Use <b>Determinizar</b> para obter o AFD equivalente.
         </div>
         <div class="check-item ok" *ngIf="space==='afd' && !issues.length"><span class="dot"></span><span>Todo estado tem exatamente uma saída por símbolo.</span></div>
-        <div class="check-item warn" *ngFor="let it of issues"><span class="dot"></span><span>{{ it.message }}</span></div>
+        <div class="check-item warn" *ngFor="let it of (space==='afd' ? issues : foreignIssues)"><span class="dot"></span><span>{{ it.message }}</span></div>
 
         <div class="rule" *ngIf="space==='afd'">Um AFD exige, de <b>cada</b> estado, exatamente <b>uma</b> saída por símbolo — nem zero, nem duas. Setas <em>chegando</em> são livres.</div>
         <div class="rule" *ngIf="space==='afn'">O AFN aceita uma palavra quando <b>algum</b> caminho termina em estado de aceitação. A transição-ε (tracejada) salta sem consumir símbolo.</div>
@@ -252,7 +259,7 @@
   <div class="modal">
     <div class="modal-head"><h3>Biblioteca de autômatos</h3><button class="xbtn" (click)="closeLibrary()">&times;</button></div>
     <div class="modal-body">
-      <p class="modal-note">Autômatos salvos no servidor (Postgres 54327). Salve o atual ou abra um já guardado.</p>
+      <p class="modal-note">Autômatos salvos no servidor (Postgres 54327). Clique para abrir, ou use <b>Comparar</b> para conferir se o seu {{ space==='afd' ? 'AFD' : 'AFN' }} atual aceita a mesma linguagem (ex.: um gabarito).</p>
       <div class="lib-error" *ngIf="libError">{{ libError }}</div>
       <div class="empty-note" *ngIf="!libError && !library.length">Nada salvo ainda.</div>
       <div class="lib-item" *ngFor="let a of library" (click)="loadSaved(a)">
@@ -261,12 +268,39 @@
           <div class="lib-name">{{ a.name }}</div>
           <div class="lib-meta mono">{{ a.stateCount }} estados</div>
         </div>
+        <button class="tbtn lib-cmp" (click)="compareWith(a, $event)" title="Comparar o {{ space==='afd' ? 'AFD' : 'AFN' }} atual com este">Comparar</button>
         <button class="lib-del" (click)="deleteSaved(a, $event)" title="Excluir">&times;</button>
       </div>
     </div>
     <div class="modal-foot">
       <button class="tbtn" (click)="closeLibrary()">Fechar</button>
       <button class="tbtn primary" (click)="saveCurrent()">Salvar {{ space==='afd' ? 'AFD' : 'AFN' }} atual</button>
+    </div>
+  </div>
+</div>
+
+<!-- COMPARAÇÃO -->
+<div class="overlay" *ngIf="cmp || cmpError">
+  <div class="modal">
+    <div class="modal-head"><h3>Comparação de linguagens</h3><button class="xbtn" (click)="closeCmp()">&times;</button></div>
+    <div class="modal-body">
+      <div class="lib-error" *ngIf="cmpError">{{ cmpError }}</div>
+      <ng-container *ngIf="cmp">
+        <p class="modal-note">Seu {{ space==='afd' ? 'AFD' : 'AFN' }} × “{{ cmp.reference }}”, sobre Σ = {{ '{' + cmp.alphabet.join(', ') + '}' }}.</p>
+        <p class="verdict ok" *ngIf="cmp.equivalent">Equivalentes: os dois aceitam exatamente a mesma linguagem. ✓</p>
+        <ng-container *ngIf="!cmp.equivalent">
+          <p class="verdict no">Linguagens diferentes.</p>
+          <p class="modal-note">
+            A palavra <b class="mono">{{ cmp.witness || 'ε' }}</b>
+            {{ cmp.acceptedBy === 'a' ? 'é aceita pelo seu autômato e rejeitada pela referência.' : 'é aceita pela referência e rejeitada pelo seu autômato.' }}
+            É a menor palavra em que eles discordam.
+          </p>
+        </ng-container>
+      </ng-container>
+    </div>
+    <div class="modal-foot">
+      <button class="tbtn" (click)="closeCmp()">Fechar</button>
+      <button class="tbtn primary" *ngIf="cmp && !cmp.equivalent" (click)="simulateWitness()">Simular essa palavra no meu</button>
     </div>
   </div>
 </div>

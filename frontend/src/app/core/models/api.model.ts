@@ -1,8 +1,8 @@
-import { AutomatonModel, AutomatonKind, Determinization } from '../../domain/automaton';
+import { AutomatonModel, AutomatonKind, Determinization, Equivalence } from '../../domain/automaton';
 
 export type {
   AutomatonModel, AutomatonState, AutomatonTransition, AutomatonKind, Determinization,
-  Subset, DetRow, NfaRun, NfaStep,
+  Subset, DetRow, NfaRun, NfaStep, Equivalence,
 } from '../../domain/automaton';
 
 /** Autômato salvo na biblioteca (retorno da API). */
@@ -17,3 +17,6 @@ export interface SavedAutomaton {
 }
 
 export type { Determinization as DeterminizationResult };
+
+/** Retorno de POST /automata/:id/compare. */
+export type Comparison = Equivalence & { reference: string };

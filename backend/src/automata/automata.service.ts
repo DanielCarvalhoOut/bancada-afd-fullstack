@@ -4,7 +4,7 @@ import { Repository } from 'typeorm';
 import { AutomatonEntity } from './automaton.entity';
 import { CreateAutomatonDto, UpdateAutomatonDto } from './dto/automaton.dto';
 import {
-  AutomatonKind, AutomatonModel, Determinization, determinize,
+  AutomatonKind, AutomatonModel, Determinization, determinize, Equivalence, equivalence,
 } from '../domain/automaton';
 
 @Injectable()
@@ -63,5 +63,13 @@ export class AutomataService {
     const result = determinize(model);
     if ('error' in result) throw new BadRequestException(result.error);
     return result;
+  }
+
+  /** Compara `model` com o autômato salvo `id` (ex.: gabarito): mesma linguagem? */
+  async compare(id: string, model: AutomatonModel): Promise<Equivalence & { reference: string }> {
+    const saved = await this.findOne(id);
+    const result = equivalence(model, saved.model);
+    if ('error' in result) throw new BadRequestException(result.error);
+    return { ...result, reference: saved.name };
   }
 }
