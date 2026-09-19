@@ -1,9 +1,9 @@
 import {
-  Body, Controller, Delete, Get, HttpCode, Param, Patch, Post, Query,
+  Body, Controller, Delete, Get, HttpCode, Param, ParseUUIDPipe, Patch, Post, Query,
 } from '@nestjs/common';
 import { AutomataService } from './automata.service';
 import {
-  CreateAutomatonDto, DeterminizeDto, UpdateAutomatonDto,
+  CompareDto, CreateAutomatonDto, DeterminizeDto, UpdateAutomatonDto,
 } from './dto/automaton.dto';
 import { AutomatonKind, AutomatonModel } from '../domain/automaton';
 
@@ -22,6 +22,13 @@ export class AutomataController {
   @HttpCode(200)
   determinize(@Body() dto: DeterminizeDto) {
     return this.service.determinize(dto.model as unknown as AutomatonModel);
+  }
+
+  /** Diz se `model` aceita a mesma linguagem que o autômato salvo (não persiste). */
+  @Post(':id/compare')
+  @HttpCode(200)
+  compare(@Param('id', ParseUUIDPipe) id: string, @Body() dto: CompareDto) {
+    return this.service.compare(id, dto.model as unknown as AutomatonModel);
   }
 
   @Get(':id')

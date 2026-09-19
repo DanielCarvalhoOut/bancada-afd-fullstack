@@ -2,7 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { API_BASE } from '../config';
-import { AutomatonKind, AutomatonModel, Determinization, SavedAutomaton } from '../models/api.model';
+import { AutomatonKind, AutomatonModel, Comparison, Determinization, SavedAutomaton } from '../models/api.model';
 
 /** Acesso à biblioteca de autômatos (CRUD) e à determinização no backend. */
 @Injectable({ providedIn: 'root' })
@@ -29,5 +29,9 @@ export class AutomataService {
   /** Determiniza um AFN no servidor (fonte de verdade). */
   determinize(model: AutomatonModel): Observable<Determinization> {
     return this.http.post<Determinization>(`${this.url}/determinize`, { model });
+  }
+  /** Diz se `model` aceita a mesma linguagem que o autômato salvo `id`. */
+  compare(id: string, model: AutomatonModel): Observable<Comparison> {
+    return this.http.post<Comparison>(`${this.url}/${id}/compare`, { model });
   }
 }
