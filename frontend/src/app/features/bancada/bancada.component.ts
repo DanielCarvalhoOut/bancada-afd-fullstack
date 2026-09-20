@@ -91,6 +91,10 @@ export class BancadaComponent implements OnInit {
 
   tab: 'props' | 'analise' = 'props';
 
+  // layout responsivo: rail de ferramentas e painel de propriedades
+  railOpen = true;
+  panelOpen = true;
+
   // picker de símbolos
   picker: { from: string; to: string; chosen: string[] } | null = null;
 
@@ -122,6 +126,9 @@ export class BancadaComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
+    // no celular, começa com o painel recolhido e a rail visível (só ícones)
+    const narrow = typeof window !== 'undefined' && window.innerWidth <= 820;
+    this.panelOpen = !narrow;
     this.space = this.editor.space;
     this.load();
     const pending = this.editor.takePending();

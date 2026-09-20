@@ -1,8 +1,11 @@
 <div class="work" [attr.data-space]="space">
-  <!-- TOPBAR -->
+  <!-- TOPBAR (enxuta) -->
   <div class="topbar">
     <button class="iconbtn" (click)="toPortal()" title="Voltar ao portal" aria-label="Voltar ao portal">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"></rect><rect x="14" y="3" width="7" height="7" rx="1"></rect><rect x="3" y="14" width="7" height="7" rx="1"></rect><rect x="14" y="14" width="7" height="7" rx="1"></rect></svg>
+    </button>
+    <button class="iconbtn" [class.active]="railOpen" (click)="railOpen=!railOpen" title="Mostrar/ocultar ferramentas" aria-label="Mostrar ou ocultar as ferramentas">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="7" x2="20" y2="7"></line><line x1="4" y1="12" x2="20" y2="12"></line><line x1="4" y1="17" x2="20" y2="17"></line></svg>
     </button>
     <div class="brand mono">bancada</div>
 
@@ -14,25 +17,9 @@
 
     <div class="spacer"></div>
 
-    <button class="tbtn" [class.active]="mode==='addState'" (click)="setMode('addState')" title="Novo estado">
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="8"></circle><line x1="12" y1="9" x2="12" y2="15"></line><line x1="9" y1="12" x2="15" y2="12"></line></svg>Estado
+    <button class="iconbtn" [class.active]="panelOpen" (click)="panelOpen=!panelOpen" title="Mostrar/ocultar painel" aria-label="Mostrar ou ocultar o painel de propriedades">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"></rect><line x1="15" y1="4" x2="15" y2="20"></line></svg>
     </button>
-    <button class="tbtn" [class.active]="mode==='addTrans'" (click)="setMode('addTrans')" title="Nova transição">
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="12" x2="18" y2="12"></line><polyline points="14 8 20 12 14 16"></polyline></svg>Transição
-    </button>
-    <button class="tbtn" [class.active]="mode==='select'" (click)="setMode('select')" title="Selecionar vários">
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-dasharray="3.2 3.2"><rect x="4" y="4" width="16" height="16" rx="2"></rect></svg>Selecionar
-    </button>
-    <div class="sep"></div>
-    <button class="tbtn" (click)="openSim()" title="Simular palavra">
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="6 4 20 12 6 20 6 4"></polygon></svg>Simular
-    </button>
-    <button class="tbtn primary" *ngIf="space==='afn'" (click)="openDeterminize()" title="Converter AFN em AFD">
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16"></path><path d="M4 12h10"></path><path d="M4 17h7"></path><path d="M20 14l-3 3 3 3"></path></svg>Determinizar
-    </button>
-    <button class="tbtn" (click)="openLibrary()" title="Biblioteca (neste navegador)">Biblioteca</button>
-    <button class="tbtn" (click)="openExport()">Exportar</button>
-    <button class="tbtn" (click)="openImport()">Importar</button>
     <button class="iconbtn" (click)="theme.toggle()" title="Alternar tema" aria-label="Alternar tema">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8z"></path></svg>
     </button>
@@ -40,6 +27,35 @@
 
   <!-- MAIN -->
   <div class="main">
+    <!-- RAIL DE FERRAMENTAS (colapsável) -->
+    <div class="rail" [class.collapsed]="!railOpen">
+      <button class="rbtn" [class.active]="mode==='addState'" (click)="setMode('addState')" title="Novo estado" aria-label="Novo estado">
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="8"></circle><line x1="12" y1="9" x2="12" y2="15"></line><line x1="9" y1="12" x2="15" y2="12"></line></svg>
+      </button>
+      <button class="rbtn" [class.active]="mode==='addTrans'" (click)="setMode('addTrans')" title="Nova transição" aria-label="Nova transição">
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="12" x2="18" y2="12"></line><polyline points="14 8 20 12 14 16"></polyline></svg>
+      </button>
+      <button class="rbtn" [class.active]="mode==='select'" (click)="setMode('select')" title="Selecionar vários" aria-label="Selecionar vários">
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-dasharray="3.2 3.2"><rect x="4" y="4" width="16" height="16" rx="2"></rect></svg>
+      </button>
+      <div class="rsep"></div>
+      <button class="rbtn" (click)="openSim()" title="Simular palavra" aria-label="Simular palavra">
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="6 4 20 12 6 20 6 4"></polygon></svg>
+      </button>
+      <button class="rbtn primary" *ngIf="space==='afn'" (click)="openDeterminize()" title="Determinizar (AFN → AFD)" aria-label="Determinizar">
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16"></path><path d="M4 12h10"></path><path d="M4 17h7"></path><path d="M20 14l-3 3 3 3"></path></svg>
+      </button>
+      <button class="rbtn" (click)="openLibrary()" title="Biblioteca (neste navegador)" aria-label="Biblioteca">
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path></svg>
+      </button>
+      <button class="rbtn" (click)="openExport()" title="Exportar" aria-label="Exportar">
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"></path><polyline points="8 11 12 15 16 11"></polyline><path d="M5 19h14"></path></svg>
+      </button>
+      <button class="rbtn" (click)="openImport()" title="Importar" aria-label="Importar">
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V3"></path><polyline points="8 7 12 3 16 7"></polyline><path d="M5 19h14"></path></svg>
+      </button>
+    </div>
+
     <div class="stage-wrap">
       <div class="hint" *ngIf="hint">{{ hint }}</div>
       <div class="watermark mono">{{ space==='afd' ? 'AFD' : 'AFN' }}</div>
@@ -99,8 +115,11 @@
       </div>
     </div>
 
-    <!-- SIDE -->
-    <div class="side">
+    <!-- backdrop do painel no mobile -->
+    <div class="scrim" *ngIf="panelOpen" (click)="panelOpen=false"></div>
+
+    <!-- SIDE (painel colapsável) -->
+    <div class="side" [class.open]="panelOpen">
       <div class="tabs">
         <button class="tab" [class.active]="tab==='props'" (click)="tab='props'">Propriedades</button>
         <button class="tab" [class.active]="tab==='analise'" (click)="tab='analise'">Análise</button>

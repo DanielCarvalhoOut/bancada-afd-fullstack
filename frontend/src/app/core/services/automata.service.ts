@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { Observable, of, throwError } from 'rxjs';
 import { AutomatonKind, AutomatonModel, Comparison, Determinization, SavedAutomaton } from '../models/api.model';
 import { determinize as domainDeterminize, equivalence as domainEquivalence } from '../../domain/automaton';
+import { REVISAO } from '../revisao';
 
 /**
  * Biblioteca de autômatos, determinização e comparação — TUDO no navegador.
@@ -12,9 +13,32 @@ import { determinize as domainDeterminize, equivalence as domainEquivalence } fr
  * backend existir, basta trocar esta classe por uma que fale HTTP.
  */
 const STORE = 'bancada-lib-v1';
+const SEEDED = 'bancada-lib-seeded-v1';
 
 @Injectable({ providedIn: 'root' })
 export class AutomataService {
+  constructor() { this.seedOnce(); }
+
+  /** Semeia a lista da prova na Biblioteca uma vez por navegador. */
+  private seedOnce(): void {
+    try {
+      if (localStorage.getItem(SEEDED)) return;
+      const items = this.read();
+      const base = Date.now();
+      REVISAO.forEach((it, i) => {
+        // createdAt decrescente → mantém a ordem Q1, Q2, … na listagem (desc).
+        const ts = new Date(base - i * 1000).toISOString();
+        items.push({
+          id: this.uid(), name: it.name, kind: it.kind,
+          stateCount: it.model.states.length,
+          model: { ...it.model }, createdAt: ts, updatedAt: ts,
+        });
+      });
+      this.write(items);
+      localStorage.setItem(SEEDED, '1');
+    } catch { /* modo privado / storage bloqueado: segue sem semear */ }
+  }
+
   // ---------- persistência local ----------
   private read(): SavedAutomaton[] {
     try {
