@@ -30,7 +30,7 @@
     <button class="tbtn primary" *ngIf="space==='afn'" (click)="openDeterminize()" title="Converter AFN em AFD">
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16"></path><path d="M4 12h10"></path><path d="M4 17h7"></path><path d="M20 14l-3 3 3 3"></path></svg>Determinizar
     </button>
-    <button class="tbtn" (click)="openLibrary()" title="Biblioteca (API)">Biblioteca</button>
+    <button class="tbtn" (click)="openLibrary()" title="Biblioteca (neste navegador)">Biblioteca</button>
     <button class="tbtn" (click)="openExport()">Exportar</button>
     <button class="tbtn" (click)="openImport()">Importar</button>
     <button class="iconbtn" (click)="theme.toggle()" title="Alternar tema" aria-label="Alternar tema">
@@ -263,7 +263,7 @@
   <div class="modal">
     <div class="modal-head"><h3>Biblioteca de autômatos</h3><button class="xbtn" (click)="closeLibrary()">&times;</button></div>
     <div class="modal-body">
-      <p class="modal-note">Autômatos salvos no servidor (Postgres 54327). Clique para abrir, ou use <b>Comparar</b> para conferir se o seu {{ space==='afd' ? 'AFD' : 'AFN' }} atual aceita a mesma linguagem (ex.: um gabarito).</p>
+      <p class="modal-note">Autômatos salvos neste navegador (cache local). Clique para abrir, ou use <b>Comparar</b> para conferir se o seu {{ space==='afd' ? 'AFD' : 'AFN' }} atual aceita a mesma linguagem (ex.: um gabarito).</p>
       <div class="lib-error" *ngIf="libError">{{ libError }}</div>
       <div class="empty-note" *ngIf="!libError && !library.length">Nada salvo ainda.</div>
       <div class="lib-item" *ngFor="let a of library" (click)="loadSaved(a)">
