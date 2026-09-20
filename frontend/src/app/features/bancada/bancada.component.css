@@ -1,5 +1,7 @@
 :host{ display:block; }
-.work{ position:fixed; inset:0; display:flex; flex-direction:column; }
+/* trava seleção de texto/callout: no toque, tocar estados não deve "selecionar a tela" */
+.work{ position:fixed; inset:0; display:flex; flex-direction:column; user-select:none; -webkit-user-select:none; -webkit-touch-callout:none; }
+.work input, .work textarea{ user-select:text; -webkit-user-select:text; }
 
 .topbar{ display:flex; align-items:center; gap:12px; padding:11px 18px; border-bottom:1px solid var(--line); background:var(--surface); flex:none; flex-wrap:wrap; }
 .brand{ font-weight:700; font-size:13px; letter-spacing:0; }
@@ -41,11 +43,23 @@
 .zoom-ctrl .zread{ width:36px; padding:3px 0; font-size:10px; color:var(--ink-dim); background:var(--surface); border:1px solid var(--line); border-radius:9px; text-align:center; box-shadow:var(--shadow); }
 
 /* picker */
-.picker{ position:absolute; left:50%; top:24px; transform:translateX(-50%); z-index:20; background:var(--surface); border:1px solid var(--line); border-radius:11px; box-shadow:var(--shadow); padding:11px; display:flex; flex-direction:column; gap:8px; width:220px; }
+.picker{ position:absolute; left:50%; top:24px; transform:translateX(-50%); z-index:30; background:var(--surface); border:1px solid var(--line); border-radius:11px; box-shadow:var(--shadow); padding:11px; display:flex; flex-direction:column; gap:8px; width:240px; }
 .picker .ptitle{ font-size:11.5px; color:var(--ink-dim); }
 .picker .prow{ display:flex; gap:6px; flex-wrap:wrap; }
-.picker .sym{ flex:1; min-width:44px; padding:8px; border-radius:7px; border:1px solid var(--line); background:var(--surface-2); font-family:"IBM Plex Mono",monospace; font-size:13px; font-weight:600; color:var(--ink); text-align:center; }
+.picker .sym{ flex:1; min-width:44px; padding:10px; border-radius:7px; border:1px solid var(--line); background:var(--surface-2); font-family:"IBM Plex Mono",monospace; font-size:14px; font-weight:600; color:var(--ink); text-align:center; }
 .picker .sym.sel{ background:var(--accent-soft); border-color:var(--accent); color:var(--accent); }
+@media (max-width:640px){
+  /* no celular o picker vira uma folha centrada, com toque confortável */
+  .picker{ top:auto; bottom:16px; left:50%; width:calc(100% - 32px); max-width:360px; padding:14px; }
+  .picker .sym{ padding:13px; font-size:15px; }
+}
+
+/* ações flutuantes da seleção */
+.selfab{ position:absolute; left:16px; bottom:16px; z-index:7; display:flex; gap:8px; }
+.selfab-btn{ display:inline-flex; align-items:center; gap:6px; padding:9px 13px; border-radius:10px; border:1px solid var(--line); background:var(--surface); color:var(--ink); font-size:13px; font-weight:600; box-shadow:var(--shadow); }
+.selfab-btn:hover{ border-color:var(--ink-dim); }
+.selfab-btn.del{ border-color:var(--trap); color:var(--trap); }
+.selfab-btn.del:hover{ background:var(--trap-fill); }
 
 /* side (painel colapsável) */
 .side{ width:340px; flex:none; border-left:1px solid var(--line); background:var(--surface); display:flex; flex-direction:column; min-height:0; overflow:hidden; transition:width .22s cubic-bezier(.3,.8,.25,1); }

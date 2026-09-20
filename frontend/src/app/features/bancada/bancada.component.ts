@@ -117,6 +117,7 @@ export class BancadaComponent implements OnInit {
 
   private drag: { id: string; dx: number; dy: number } | null = null;
   private marquee: { x1: number; y1: number; x2: number; y2: number } | null = null;
+  private pan: { sx: number; sy: number; vx: number; vy: number; kx: number; ky: number } | null = null;
 
   constructor(
     private automataSvc: AutomataService,
@@ -300,10 +301,25 @@ export class BancadaComponent implements OnInit {
     } else if (edgeKey) {
       this.selectedEdge = edgeKey; this.selected = null;
     } else {
+      // canvas vazio no modo idle: arrastar = mover a vista (pan), tocar = limpar seleção
       this.selected = null; this.selectedEdge = null;
+      const rect = this.stageRef.nativeElement.getBoundingClientRect();
+      this.pan = {
+        sx: evt.clientX, sy: evt.clientY, vx: this.view.x, vy: this.view.y,
+        kx: this.view.w / (rect.width || 1), ky: this.view.h / (rect.height || 1),
+      };
+      this.stageRef.nativeElement.setPointerCapture(evt.pointerId);
     }
   }
   onMove(evt: PointerEvent): void {
+    if (this.pan) {
+      this.view = {
+        ...this.view,
+        x: this.pan.vx - (evt.clientX - this.pan.sx) * this.pan.kx,
+        y: this.pan.vy - (evt.clientY - this.pan.sy) * this.pan.ky,
+      };
+      return;
+    }
     if (this.marquee) {
       const p = this.toSVG(evt);
       this.marquee.x2 = p.x; this.marquee.y2 = p.y;
@@ -319,6 +335,7 @@ export class BancadaComponent implements OnInit {
     s.x = p.x + this.drag.dx; s.y = p.y + this.drag.dy;
   }
   onUp(evt: PointerEvent): void {
+    if (this.pan) { this.pan = null; try { this.stageRef.nativeElement.releasePointerCapture(evt.pointerId); } catch { /* noop */ } return; }
     if (this.marquee) { this.marquee = null; try { this.stageRef.nativeElement.releasePointerCapture(evt.pointerId); } catch { /* noop */ } return; }
     if (this.drag) { try { this.stageRef.nativeElement.releasePointerCapture(evt.pointerId); } catch { /* noop */ } this.drag = null; this.touch(); }
   }
