@@ -10,7 +10,7 @@ import {
   AutomatonKind, AutomatonModel, Comparison, Determinization, SavedAutomaton,
 } from '../../core/models/api.model';
 import {
-  EPS, determinize as localDeterminize, determinismIssues,
+  DEFAULT_ALPHABET, EPS, determinize as localDeterminize, determinismIssues,
   getState, parseAlphabet, realSymbols, simulateNfa, trace as localTrace, validateAlphabet,
 } from '../../domain/automaton';
 import { computeLayout, Layout, R } from '../../domain/render';
@@ -37,18 +37,29 @@ function readModel(data: unknown): AutomatonModel {
     if (ids.has(st.id)) throw new Error(`id de estado repetido: "${st.id}".`);
     ids.add(st.id);
   }
-  for (const [i, t] of d.transitions.entries()) {
-    const ok = t && typeof t.from === 'string' && typeof t.to === 'string'
-      && Array.isArray(t.symbols) && t.symbols.every((x: unknown) => typeof x === 'string');
-    if (!ok) throw new Error(`transição ${i + 1} precisa de from, to e symbols (lista de textos).`);
-    if (!ids.has(t.from) || !ids.has(t.to)) throw new Error(`transição ${i + 1} liga um estado que não existe.`);
+  if (d.kind !== undefined && d.kind !== 'afd' && d.kind !== 'afn') {
+    throw new Error(`"kind" deve ser "afd" ou "afn" (veio "${d.kind}").`);
   }
-  const kind: AutomatonKind = d.kind === 'afn' ? 'afn' : 'afd';
+  const kind: AutomatonKind = d.kind ?? 'afd';
   let alphabet: string[] | undefined;
   if (d.alphabet !== undefined) {
     const parsed = Array.isArray(d.alphabet) ? validateAlphabet(d.alphabet) : { error: '"alphabet" deve ser uma lista.' };
     if ('error' in parsed) throw new Error(parsed.error);
     alphabet = parsed;
+  }
+  // Símbolo de seta fora de Σ nunca seria lido na simulação: a seta ficaria
+  // desenhada e morta. Melhor recusar aqui do que deixar o autômato mudo.
+  const sigma = [...(alphabet ?? DEFAULT_ALPHABET), EPS];
+  for (const [i, t] of d.transitions.entries()) {
+    const ok = t && typeof t.from === 'string' && typeof t.to === 'string'
+      && Array.isArray(t.symbols) && t.symbols.length
+      && t.symbols.every((x: unknown) => typeof x === 'string');
+    if (!ok) throw new Error(`transição ${i + 1} precisa de from, to e symbols (lista de textos não vazia).`);
+    if (!ids.has(t.from) || !ids.has(t.to)) throw new Error(`transição ${i + 1} liga um estado que não existe.`);
+    const foreign = t.symbols.find((x: string) => !sigma.includes(x));
+    if (foreign !== undefined) {
+      throw new Error(`transição ${i + 1} usa o símbolo "${foreign}", que não está em Σ = {${sigma.slice(0, -1).join(', ')}} (ε é aceito).`);
+    }
   }
   return { kind, alphabet, states: d.states, transitions: d.transitions };
 }
@@ -556,9 +567,18 @@ export class BancadaComponent implements OnInit {
     });
   }
   closeCmp(): void { this.cmp = null; this.cmpError = ''; }
+  /**
+   * Símbolo da testemunha que não existe no Σ do autômato aberto, se houver.
+   * A comparação roda sobre Σ(seu) ∪ Σ(referência): a palavra pode conter um
+   * símbolo que o seu autômato sequer lê — é justamente por isso que ele rejeita.
+   */
+  get witnessOutsideSigma(): string | null {
+    if (!this.cmp || this.cmp.equivalent) return null;
+    return [...this.cmp.witness].find((c) => !this.sigma.includes(c)) ?? null;
+  }
   /** Abre a simulação já com a palavra que distingue os dois autômatos. */
   simulateWitness(): void {
-    if (!this.cmp || this.cmp.equivalent) return;
+    if (!this.cmp || this.cmp.equivalent || this.witnessOutsideSigma) return;
     const w = this.cmp.witness;
     this.closeCmp();
     this.openSim();

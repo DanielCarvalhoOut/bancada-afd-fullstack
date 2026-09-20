@@ -299,12 +299,16 @@
             {{ cmp.acceptedBy === 'a' ? 'é aceita pelo seu autômato e rejeitada pela referência.' : 'é aceita pela referência e rejeitada pelo seu autômato.' }}
             É a menor palavra em que eles discordam.
           </p>
+          <p class="modal-note" *ngIf="witnessOutsideSigma as sym">
+            O símbolo <b class="mono">{{ sym }}</b> não está no Σ do seu autômato, que por isso
+            rejeita a palavra. Para simulá-la aqui, acrescente <b class="mono">{{ sym }}</b> ao Σ na aba Análise.
+          </p>
         </ng-container>
       </ng-container>
     </div>
     <div class="modal-foot">
       <button class="tbtn" (click)="closeCmp()">Fechar</button>
-      <button class="tbtn primary" *ngIf="cmp && !cmp.equivalent" (click)="simulateWitness()">Simular essa palavra no meu</button>
+      <button class="tbtn primary" *ngIf="cmp && !cmp.equivalent && !witnessOutsideSigma" (click)="simulateWitness()">Simular essa palavra no meu</button>
     </div>
   </div>
 </div>

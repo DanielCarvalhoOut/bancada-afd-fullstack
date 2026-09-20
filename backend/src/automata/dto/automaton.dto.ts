@@ -1,6 +1,7 @@
 import { Type } from 'class-transformer';
 import {
-  ArrayMaxSize, ArrayMinSize, ArrayUnique, IsArray, IsBoolean, IsDefined, IsIn, IsNumber,
+  ArrayMaxSize, ArrayMinSize, ArrayNotEmpty, ArrayUnique, IsArray, IsBoolean, IsDefined,
+  IsIn, IsNumber,
   IsOptional, IsString, Matches, MaxLength, ValidateNested,
 } from 'class-validator';
 import { AutomatonKind } from '../../domain/automaton';
@@ -18,7 +19,11 @@ export class StateDto {
 export class TransitionDto {
   @IsString() from: string;
   @IsString() to: string;
-  @IsArray() @IsString({ each: true }) symbols: string[];
+
+  /** Um símbolo por caractere (ε incluído); a palavra é lida caractere a caractere. */
+  @IsArray() @ArrayNotEmpty() @ArrayUnique() @IsString({ each: true })
+  @Matches(/^[^\s,]$/u, { each: true, message: 'cada símbolo de uma transição deve ser um único caractere (ε é aceito)' })
+  symbols: string[];
 }
 
 export class AutomatonModelDto {
