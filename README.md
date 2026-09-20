@@ -74,6 +74,7 @@ e a determinização no servidor exigem a API + Postgres no ar.
 | GET    | `/api/automata`               | lista a biblioteca (opcional `?kind=afd\|afn`) |
 | POST   | `/api/automata`               | salva um autômato (afd/afn)                 |
 | POST   | `/api/automata/determinize`   | converte um AFN em AFD (não persiste)       |
+| POST   | `/api/automata/:id/compare`   | compara `{ model }` com o salvo: mesma linguagem? Se não, devolve a menor palavra que os distingue |
 | GET    | `/api/automata/:id`           | um autômato salvo                           |
 | PATCH  | `/api/automata/:id`           | renomeia / atualiza                          |
 | DELETE | `/api/automata/:id`           | exclui                                       |
@@ -94,3 +95,14 @@ npm run migration:generate -- src/migrations/NomeDaMigration   # gera a partir d
 - **Identidade visual neutra** (grafite, IBM Plex, acentos sóbrios azul-aço/bronze).
 - Removidos os módulos de **desafios** e **progresso** (o app começou limpo).
 - A entidade guarda o **tipo** (`kind`) do autômato; a biblioteca lista AFDs e AFNs.
+
+## Alfabeto e comparação
+
+- **Σ configurável:** cada autômato guarda seu alfabeto em `model.alphabet` (símbolos de
+  um caractere, sem ε; ausente = `{0, 1}`). Edite na aba **Análise**.
+- **Comparar:** na **Biblioteca**, o botão *Comparar* verifica se o autômato atual aceita a
+  mesma linguagem que o salvo (ex.: um gabarito). Funciona entre AFD e AFN, e com Σ
+  diferentes (símbolo fora do Σ de um lado = rejeição daquele lado).
+- **Checagem do motor:** `npm run check:domain` (no `backend/`) confronta a equivalência
+  com força bruta em milhares de AFNs aleatórios.
+

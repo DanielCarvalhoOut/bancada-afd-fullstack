@@ -2,20 +2,67 @@ import { CommonModule } from '@angular/common';
 import { Component, ElementRef, HostListener, OnInit, ViewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
+import { firstValueFrom } from 'rxjs';
 import { AutomataService } from '../../core/services/automata.service';
 import { EditorStateService } from '../../core/services/editor-state.service';
 import { ThemeService } from '../../core/services/theme.service';
 import {
-  AutomatonKind, AutomatonModel, Determinization, SavedAutomaton,
+  AutomatonKind, AutomatonModel, Comparison, Determinization, SavedAutomaton,
 } from '../../core/models/api.model';
 import {
-  ALPHABET, EPS, determinize as localDeterminize, determinismIssues,
-  getState, realSymbols, simulateNfa, trace as localTrace,
+  DEFAULT_ALPHABET, EPS, determinize as localDeterminize, determinismIssues,
+  getState, parseAlphabet, realSymbols, simulateNfa, trace as localTrace, validateAlphabet,
 } from '../../domain/automaton';
 import { computeLayout, Layout, R } from '../../domain/render';
 
 type Mode = 'idle' | 'addState' | 'addTrans' | 'select';
 const STORAGE = 'bancada-aut-v2';
+
+const isFiniteNum = (v: unknown) => typeof v === 'number' && Number.isFinite(v);
+
+/**
+ * Lê um autômato de JSON importado; lança Error com mensagem legível se inválido.
+ * Confere a forma de cada estado e transição: o JSON vem de fora e um campo
+ * errado quebraria o desenho ou a simulação só mais tarde, longe da causa.
+ */
+function readModel(data: unknown): AutomatonModel {
+  const d = data as Partial<AutomatonModel> | null;
+  if (!d || !Array.isArray(d.states) || !Array.isArray(d.transitions)) throw new Error('faltam "states" e "transitions".');
+  const ids = new Set<string>();
+  for (const [i, st] of d.states.entries()) {
+    const ok = st && typeof st.id === 'string' && typeof st.name === 'string'
+      && typeof st.initial === 'boolean' && typeof st.accepting === 'boolean'
+      && isFiniteNum(st.x) && isFiniteNum(st.y);
+    if (!ok) throw new Error(`estado ${i + 1} precisa de id, name, initial, accepting, x e y válidos.`);
+    if (ids.has(st.id)) throw new Error(`id de estado repetido: "${st.id}".`);
+    ids.add(st.id);
+  }
+  if (d.kind !== undefined && d.kind !== 'afd' && d.kind !== 'afn') {
+    throw new Error(`"kind" deve ser "afd" ou "afn" (veio "${d.kind}").`);
+  }
+  const kind: AutomatonKind = d.kind ?? 'afd';
+  let alphabet: string[] | undefined;
+  if (d.alphabet !== undefined) {
+    const parsed = Array.isArray(d.alphabet) ? validateAlphabet(d.alphabet) : { error: '"alphabet" deve ser uma lista.' };
+    if ('error' in parsed) throw new Error(parsed.error);
+    alphabet = parsed;
+  }
+  // Símbolo de seta fora de Σ nunca seria lido na simulação: a seta ficaria
+  // desenhada e morta. Melhor recusar aqui do que deixar o autômato mudo.
+  const sigma = [...(alphabet ?? DEFAULT_ALPHABET), EPS];
+  for (const [i, t] of d.transitions.entries()) {
+    const ok = t && typeof t.from === 'string' && typeof t.to === 'string'
+      && Array.isArray(t.symbols) && t.symbols.length
+      && t.symbols.every((x: unknown) => typeof x === 'string');
+    if (!ok) throw new Error(`transição ${i + 1} precisa de from, to e symbols (lista de textos não vazia).`);
+    if (!ids.has(t.from) || !ids.has(t.to)) throw new Error(`transição ${i + 1} liga um estado que não existe.`);
+    const foreign = t.symbols.find((x: string) => !sigma.includes(x));
+    if (foreign !== undefined) {
+      throw new Error(`transição ${i + 1} usa o símbolo "${foreign}", que não está em Σ = {${sigma.slice(0, -1).join(', ')}} (ε é aceito).`);
+    }
+  }
+  return { kind, alphabet, states: d.states, transitions: d.transitions };
+}
 
 function emptyPair(): Record<AutomatonKind, AutomatonModel> {
   return { afd: { kind: 'afd', states: [], transitions: [] }, afn: { kind: 'afn', states: [], transitions: [] } };
@@ -55,9 +102,14 @@ export class BancadaComponent implements OnInit {
   det: Determinization | null = null;
   ioModal: 'export' | 'import' | null = null;
   ioText = '';
+  ioMsg = '';
+  importing = false;
   libModal = false;
   library: SavedAutomaton[] = [];
   libError = '';
+  cmp: Comparison | null = null;
+  cmpError = '';
+  alphabetError = '';
 
   private drag: { id: string; dx: number; dy: number } | null = null;
   private marquee: { x1: number; y1: number; x2: number; y2: number } | null = null;
@@ -96,8 +148,8 @@ export class BancadaComponent implements OnInit {
       const data = JSON.parse(raw);
       if (data?.afd && data?.afn) {
         this.automata = {
-          afd: { kind: 'afd', states: data.afd.states ?? [], transitions: data.afd.transitions ?? [] },
-          afn: { kind: 'afn', states: data.afn.states ?? [], transitions: data.afn.transitions ?? [] },
+          afd: { kind: 'afd', alphabet: data.afd.alphabet, states: data.afd.states ?? [], transitions: data.afd.transitions ?? [] },
+          afn: { kind: 'afn', alphabet: data.afn.alphabet, states: data.afn.states ?? [], transitions: data.afn.transitions ?? [] },
         };
       }
     } catch { /* ignora */ }
@@ -125,6 +177,28 @@ export class BancadaComponent implements OnInit {
   private reset(): void {
     this.selected = null; this.selectedEdge = null; this.pendingFrom = null;
     this.multi = []; this.active = []; this.mode = 'idle'; this.picker = null;
+    this.alphabetError = '';
+  }
+
+  // ---------- alfabeto ----------
+  /**
+   * Troca Σ do autômato ativo. Todo símbolo de transição fora do novo Σ (os
+   * removidos agora e os que já estavam fora, ex.: vindos de import) é tirado
+   * das setas, com confirmação, pois apaga setas. ε não é símbolo de Σ e fica.
+   */
+  applyAlphabet(text: string): void {
+    const parsed = parseAlphabet(text);
+    if ('error' in parsed) { this.alphabetError = parsed.error; return; }
+    this.alphabetError = '';
+    const outside = (s: string) => s !== EPS && !parsed.includes(s);
+    const affected = this.model.transitions.filter((t) => t.symbols.some(outside));
+    const removed = [...new Set(affected.flatMap((t) => t.symbols.filter(outside)))];
+    if (affected.length && !confirm(`Remover ${removed.join(', ')} de Σ apaga esse(s) símbolo(s) de ${affected.length} transição(ões). Continuar?`)) return;
+    for (const t of affected) t.symbols = t.symbols.filter((s) => !outside(s));
+    this.model.transitions = this.model.transitions.filter((t) => t.symbols.length);
+    this.model.alphabet = parsed;
+    this.selectedEdge = null;
+    this.touch();
   }
 
   // ---------- layout ----------
@@ -144,7 +218,10 @@ export class BancadaComponent implements OnInit {
     return { x: Math.min(m.x1, m.x2), y: Math.min(m.y1, m.y2), w: Math.abs(m.x2 - m.x1), h: Math.abs(m.y2 - m.y1) };
   }
   get issues() { return determinismIssues(this.model); }
-  get pickerSyms(): string[] { return this.space === 'afn' ? [...ALPHABET, EPS] : [...ALPHABET]; }
+  get sigma(): string[] { return realSymbols(this.model); }
+  get pickerSyms(): string[] { return this.space === 'afn' ? [...this.sigma, EPS] : this.sigma; }
+  /** No AFN o painel não lista problemas de determinismo, só símbolos fora de Σ. */
+  get foreignIssues() { return this.issues.filter((i) => i.kind === 'foreign'); }
   get hint(): string {
     switch (this.mode) {
       case 'addState': return 'Clique na tela para posicionar um estado.';
@@ -343,7 +420,6 @@ export class BancadaComponent implements OnInit {
   closeSim(): void { this.simModal = false; this.active = []; }
   runSim(): void {
     const w = this.simWord.trim();
-    for (const c of w) if (!realSymbols().includes(c)) { this.simHtml = `<p class="verdict no">Símbolo inválido: “${c}”. Use só 0 e 1.</p>`; return; }
     if (this.space === 'afd') {
       const r = localTrace(this.model, w);
       if ('error' in r) { this.simHtml = `<p class="verdict no">${r.error}</p>`; return; }
@@ -387,26 +463,74 @@ export class BancadaComponent implements OnInit {
   }
   applyDet(): void {
     if (!this.det) return;
-    this.automata.afd = { kind: 'afd', states: JSON.parse(JSON.stringify(this.det.afd.states)), transitions: JSON.parse(JSON.stringify(this.det.afd.transitions)) };
+    this.automata.afd = { kind: 'afd', ...JSON.parse(JSON.stringify(this.det.afd)) };
     this.detModal = false;
     this.switchSpace('afd');
     this.touch();
   }
 
   // ---------- export / import ----------
-  openExport(): void { this.ioModal = 'export'; this.ioText = JSON.stringify({ kind: this.space, states: this.model.states, transitions: this.model.transitions }, null, 2); }
-  openImport(): void { this.ioModal = 'import'; this.ioText = ''; }
-  closeIo(): void { this.ioModal = null; }
+  openExport(): void { this.ioModal = 'export'; this.ioText = JSON.stringify({ kind: this.space, alphabet: this.sigma, states: this.model.states, transitions: this.model.transitions }, null, 2); }
+  openImport(): void { this.ioModal = 'import'; this.ioText = ''; this.ioMsg = ''; }
+  closeIo(): void { if (!this.importing) this.ioModal = null; }
+
+  /** Carrega um arquivo .json escolhido pelo usuário na caixa de texto. */
+  async pickImportFile(input: HTMLInputElement): Promise<void> {
+    const file = input.files?.[0];
+    if (file) this.ioText = await file.text();
+    input.value = '';
+  }
+
+  /**
+   * Aceita dois formatos:
+   * - um autômato exportado ({ kind, alphabet, states, transitions }) → abre na bancada;
+   * - uma lista de salvos ([{ name, kind, model }], a Biblioteca exportada) → grava
+   *   cada um na Biblioteca, pulando nomes que já existem (reimportar não duplica).
+   */
   doImport(): void {
+    let data: unknown;
+    try { data = JSON.parse(this.ioText); } catch { this.ioMsg = 'JSON inválido: confira se colou o arquivo inteiro.'; return; }
+    if (Array.isArray(data)) { void this.importList(data); return; }
     try {
-      const data = JSON.parse(this.ioText);
-      if (!Array.isArray(data.states) || !Array.isArray(data.transitions)) throw new Error('formato');
-      const kind: AutomatonKind = data.kind === 'afn' ? 'afn' : 'afd';
-      this.automata[kind] = { kind, states: data.states, transitions: data.transitions };
-      if (kind !== this.space) this.switchSpace(kind); else { this.reset(); this.fit(); }
+      const model = readModel(data);
+      this.automata[model.kind!] = model;
+      if (model.kind !== this.space) this.switchSpace(model.kind!); else { this.reset(); this.fit(); }
       this.ioModal = null; this.touch();
+    } catch (e) {
+      this.ioMsg = `Autômato inválido: ${(e as Error).message}`;
+    }
+  }
+
+  private async importList(items: unknown[]): Promise<void> {
+    // Valida tudo antes de gravar qualquer coisa: lista com erro não entra pela metade.
+    const entries: { name: string; model: AutomatonModel }[] = [];
+    for (const [i, it] of items.entries()) {
+      const rec = it as { name?: unknown; kind?: unknown; model?: unknown };
+      const name = typeof rec?.name === 'string' ? rec.name.trim().slice(0, 120) : '';
+      if (!name) { this.ioMsg = `Item ${i + 1}: falta o campo "name".`; return; }
+      try {
+        entries.push({ name, model: readModel({ ...(rec.model as object), kind: rec.kind ?? (rec.model as { kind?: unknown })?.kind }) });
+      } catch (e) {
+        this.ioMsg = `Item ${i + 1} (“${name}”): ${(e as Error).message}`; return;
+      }
+    }
+    this.importing = true;
+    this.ioMsg = `Importando ${entries.length} autômato(s)…`;
+    try {
+      const existing = new Set((await firstValueFrom(this.automataSvc.list())).map((a) => a.name));
+      let created = 0, skipped = 0;
+      for (const e of entries) {
+        if (existing.has(e.name)) { skipped++; continue; }
+        await firstValueFrom(this.automataSvc.create(e.name, e.model.kind!, e.model));
+        existing.add(e.name);
+        created++;
+      }
+      this.ioMsg = `${created} gravado(s) na Biblioteca` + (skipped ? `, ${skipped} já existia(m) e foi(ram) pulado(s).` : '.');
+      this.ioText = '';
     } catch {
-      alert('JSON inválido. Cole um autômato exportado por esta bancada.');
+      this.ioMsg = 'Falha ao gravar na Biblioteca — confira se a API (porta 3000) e o Postgres estão no ar. O que já foi gravado fica; reimportar pula os repetidos.';
+    } finally {
+      this.importing = false;
     }
   }
 
@@ -433,6 +557,35 @@ export class BancadaComponent implements OnInit {
     if (a.kind !== this.space) this.switchSpace(a.kind); else { this.reset(); this.fit(); }
     this.touch();
   }
+  /** Compara o autômato ativo com um salvo (gabarito) no servidor. */
+  compareWith(a: SavedAutomaton, ev: Event): void {
+    ev.stopPropagation();
+    this.cmp = null; this.cmpError = '';
+    this.automataSvc.compare(a.id, this.model).subscribe({
+      next: (r) => { this.cmp = r; this.libModal = false; },
+      error: (e) => { this.cmpError = e?.error?.message ?? 'Não foi possível comparar — backend offline.'; this.libModal = false; },
+    });
+  }
+  closeCmp(): void { this.cmp = null; this.cmpError = ''; }
+  /**
+   * Símbolo da testemunha que não existe no Σ do autômato aberto, se houver.
+   * A comparação roda sobre Σ(seu) ∪ Σ(referência): a palavra pode conter um
+   * símbolo que o seu autômato sequer lê — é justamente por isso que ele rejeita.
+   */
+  get witnessOutsideSigma(): string | null {
+    if (!this.cmp || this.cmp.equivalent) return null;
+    return [...this.cmp.witness].find((c) => !this.sigma.includes(c)) ?? null;
+  }
+  /** Abre a simulação já com a palavra que distingue os dois autômatos. */
+  simulateWitness(): void {
+    if (!this.cmp || this.cmp.equivalent || this.witnessOutsideSigma) return;
+    const w = this.cmp.witness;
+    this.closeCmp();
+    this.openSim();
+    this.simWord = w;
+    this.runSim();
+  }
+
   deleteSaved(a: SavedAutomaton, ev: Event): void {
     ev.stopPropagation();
     this.automataSvc.remove(a.id).subscribe({ next: () => this.refreshLibrary(), error: () => this.refreshLibrary() });

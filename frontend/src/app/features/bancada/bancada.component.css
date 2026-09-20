@@ -89,3 +89,8 @@
 .lib-meta{ font-size:10.5px; color:var(--ink-dim); margin-top:2px; }
 .lib-del{ flex:none; width:30px; height:30px; border-radius:8px; border:1px solid transparent; background:transparent; color:var(--trap); font-size:18px; line-height:1; }
 .lib-del:hover{ background:var(--trap-fill); border-color:var(--trap); }
+
+.lib-cmp{ flex:none; }
+.sigma-note{ margin:6px 0 4px; font-size:12px; }
+.file-pick{ display:inline-flex; margin-bottom:10px; cursor:pointer; }
+.import-msg{ font-size:12.5px; margin-top:10px; line-height:1.5; }

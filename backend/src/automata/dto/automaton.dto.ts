@@ -1,7 +1,8 @@
 import { Type } from 'class-transformer';
 import {
-  IsArray, IsBoolean, IsIn, IsInt, IsOptional, IsString,
-  MaxLength, ValidateNested,
+  ArrayMaxSize, ArrayMinSize, ArrayNotEmpty, ArrayUnique, IsArray, IsBoolean, IsDefined,
+  IsIn, IsNumber,
+  IsOptional, IsString, Matches, MaxLength, ValidateNested,
 } from 'class-validator';
 import { AutomatonKind } from '../../domain/automaton';
 
@@ -10,19 +11,29 @@ export class StateDto {
   @IsString() @MaxLength(40) name: string;
   @IsBoolean() initial: boolean;
   @IsBoolean() accepting: boolean;
-  @IsInt() x: number;
-  @IsInt() y: number;
+  // posição no canvas: criar/arrastar com o mouse gera valores fracionados
+  @IsNumber({ allowNaN: false, allowInfinity: false }) x: number;
+  @IsNumber({ allowNaN: false, allowInfinity: false }) y: number;
 }
 
 export class TransitionDto {
   @IsString() from: string;
   @IsString() to: string;
-  @IsArray() @IsString({ each: true }) symbols: string[];
+
+  /** Um símbolo por caractere (ε incluído); a palavra é lida caractere a caractere. */
+  @IsArray() @ArrayNotEmpty() @ArrayUnique() @IsString({ each: true })
+  @Matches(/^[^\s,]$/u, { each: true, message: 'cada símbolo de uma transição deve ser um único caractere (ε é aceito)' })
+  symbols: string[];
 }
 
 export class AutomatonModelDto {
   @IsOptional() @IsIn(['afd', 'afn'])
   kind?: AutomatonKind;
+
+  /** Σ: 1 a 10 símbolos de um caractere cada, sem repetição e sem ε. */
+  @IsOptional() @IsArray() @ArrayMinSize(1) @ArrayMaxSize(10) @ArrayUnique()
+  @Matches(/^[^\s,ε]$/u, { each: true, message: 'cada símbolo de Σ deve ser um único caractere (e não ε, vírgula ou espaço)' })
+  alphabet?: string[];
 
   @IsArray() @ValidateNested({ each: true }) @Type(() => StateDto)
   states: StateDto[];
@@ -37,7 +48,7 @@ export class CreateAutomatonDto {
   @IsOptional() @IsIn(['afd', 'afn'])
   kind?: AutomatonKind;
 
-  @ValidateNested() @Type(() => AutomatonModelDto)
+  @IsDefined() @ValidateNested() @Type(() => AutomatonModelDto)
   model: AutomatonModelDto;
 }
 
@@ -53,6 +64,12 @@ export class UpdateAutomatonDto {
 
 /** Corpo de POST /automata/determinize: um AFN a converter. */
 export class DeterminizeDto {
-  @ValidateNested() @Type(() => AutomatonModelDto)
+  @IsDefined() @ValidateNested() @Type(() => AutomatonModelDto)
+  model: AutomatonModelDto;
+}
+
+/** Corpo de POST /automata/:id/compare: o autômato a comparar com o salvo. */
+export class CompareDto {
+  @IsDefined() @ValidateNested() @Type(() => AutomatonModelDto)
   model: AutomatonModelDto;
 }

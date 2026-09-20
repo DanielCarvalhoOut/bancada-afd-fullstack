@@ -1,0 +1,118 @@
+/**
+ * Checagem executável do motor: `npm run check:domain`.
+ * Compara `equivalence` com força bruta em AFNs aleatórios e cobre parseAlphabet.
+ */
+import { strict as assert } from 'node:assert';
+import {
+  AutomatonModel, EPS, determinize, equivalence, parseAlphabet, simulateNfa, validateAlphabet,
+} from '../src/domain/automaton';
+
+function acceptsAny(m: AutomatonModel, w: string): boolean {
+  const r = simulateNfa(m, w);
+  if ('error' in r) throw new Error(r.error);
+  return r.accepted;
+}
+
+function words(sigma: string[], maxLen: number): string[] {
+  const out = [''];
+  for (let i = 0; i < out.length; i++)
+    if (out[i].length < maxLen) for (const s of sigma) out.push(out[i] + s);
+  return out; // em ordem de tamanho
+}
+
+let seed = 42;
+const rand = () => ((seed = (seed * 1103515245 + 12345) % 2 ** 31) / 2 ** 31);
+
+function randomNfa(sigma: string[]): AutomatonModel {
+  const n = 1 + Math.floor(rand() * 3);
+  const states = Array.from({ length: n }, (_, i) => ({
+    id: 's' + i, name: 'q' + i, initial: i === 0, accepting: rand() < 0.4, x: 0, y: 0,
+  }));
+  const transitions: AutomatonModel['transitions'] = [];
+  for (const from of states)
+    for (const to of states) {
+      const symbols = [...sigma, EPS].filter(() => rand() < 0.3);
+      if (symbols.length) transitions.push({ from: from.id, to: to.id, symbols });
+    }
+  return { kind: 'afn', alphabet: sigma, states, transitions };
+}
+
+// 1) Equivalência x força bruta
+const sigma = ['a', 'b'];
+const all = words(sigma, 9);
+for (let i = 0; i < 3000; i++) {
+  const a = randomNfa(sigma), b = randomNfa(sigma);
+  const r = equivalence(a, b);
+  if ('error' in r) throw new Error(r.error);
+  const firstDiff = all.find((w) => acceptsAny(a, w) !== acceptsAny(b, w));
+  if (r.equivalent) {
+    assert.equal(firstDiff, undefined, `disse equivalente, mas diverge em "${firstDiff}"`);
+  } else {
+    assert.notEqual(acceptsAny(a, r.witness), acceptsAny(b, r.witness), 'testemunha não diverge');
+    assert.equal(acceptsAny(a, r.witness), r.acceptedBy === 'a');
+    if (firstDiff !== undefined) assert.equal(r.witness.length, firstDiff.length, 'testemunha não é mínima');
+  }
+}
+
+// 2) Alfabetos diferentes: símbolo desconhecido por um lado = rejeição nesse lado
+const onlyA: AutomatonModel = {
+  alphabet: ['a'], transitions: [{ from: 's0', to: 's0', symbols: ['a'] }],
+  states: [{ id: 's0', name: 'q0', initial: true, accepting: true, x: 0, y: 0 }],
+};
+const aOrB: AutomatonModel = {
+  alphabet: ['a', 'b'], transitions: [{ from: 's0', to: 's0', symbols: ['a', 'b'] }],
+  states: [{ id: 's0', name: 'q0', initial: true, accepting: true, x: 0, y: 0 }],
+};
+assert.deepEqual(equivalence(onlyA, aOrB), { equivalent: false, alphabet: ['a', 'b'], witness: 'b', acceptedBy: 'b' });
+
+// 3) parseAlphabet
+assert.deepEqual(parseAlphabet('a, b, c'), ['a', 'b', 'c']);
+assert.deepEqual(parseAlphabet('01'), ['0', '1']);
+assert.ok('error' in (parseAlphabet('a, bb') as object));
+assert.ok('error' in (parseAlphabet('a,a') as object));
+assert.ok('error' in (parseAlphabet(`a,${EPS}`) as object));
+assert.ok('error' in (parseAlphabet(' ') as object));
+assert.ok('error' in (validateAlphabet(['ab']) as object), 'lista de um item com 2 caracteres');
+assert.ok('error' in (validateAlphabet([1]) as object));
+assert.deepEqual(validateAlphabet(['a', 'b']), ['a', 'b']);
+
+// 4) ids com '|' e '#' não podem colidir na chave dos conjuntos.
+// Com join('|'), {"a|b"} (só aceitação) e {"a","b"} (nenhum aceita) teriam a mesma
+// chave: a BFS acharia o par "já visto" e perderia a divergência.
+const st = (id: string, initial: boolean, accepting: boolean) => ({ id, name: id, initial, accepting, x: 0, y: 0 });
+const tricky: AutomatonModel = {
+  kind: 'afn',
+  states: [st('i', true, false), st('a|b', false, true), st('a', false, false), st('b', false, false)],
+  transitions: [
+    { from: 'i', to: 'a|b', symbols: ['0'] },
+    { from: 'i', to: 'a', symbols: ['1'] }, { from: 'i', to: 'b', symbols: ['1'] },
+  ],
+};
+// B leva "0" e "1" ao mesmo estado: os pares ({a|b},{f}) e ({a,b},{f}) só se
+// distinguem pelo lado A. Se colidissem, a divergência em "1" sumiria.
+const oneSymbol: AutomatonModel = {
+  states: [st('i', true, false), st('f', false, true)],
+  transitions: [{ from: 'i', to: 'f', symbols: ['0', '1'] }],
+};
+assert.deepEqual(equivalence(tricky, oneSymbol), { equivalent: false, alphabet: ['0', '1'], witness: '1', acceptedBy: 'b' });
+const det = determinize(tricky);
+if ('error' in det) throw new Error(det.error);
+assert.equal(det.subsets.length, 4, 'determinize fundiu {a|b} com {a,b}'); // {i}, {a|b}, {a,b}, ∅
+
+// 5) símbolo em transição mas fora de Σ não conta para a linguagem
+const foreignX: AutomatonModel = {
+  alphabet: ['a'],
+  states: [st('i', true, true), st('f', false, true)],
+  transitions: [{ from: 'i', to: 'i', symbols: ['a'] }, { from: 'i', to: 'f', symbols: ['x'] }],
+};
+const aStarOverAx: AutomatonModel = { ...onlyA, alphabet: ['a', 'x'] };
+assert.deepEqual(equivalence(foreignX, aStarOverAx), { equivalent: true, alphabet: ['a', 'x'] });
+
+// 6) vírgula e espaço não são símbolos; entrada vazia no meio é erro
+assert.ok('error' in (validateAlphabet([',']) as object));
+assert.ok('error' in (validateAlphabet([' ']) as object));
+assert.ok('error' in (parseAlphabet('a,,b') as object));
+assert.deepEqual(parseAlphabet('a, b,'), ['a', 'b']);
+assert.deepEqual(parseAlphabet('a b'), ['a', 'b']);
+
+console.log('automaton.check: ok');
