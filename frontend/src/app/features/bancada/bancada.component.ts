@@ -230,6 +230,8 @@ export class BancadaComponent implements OnInit {
     return { x: Math.min(m.x1, m.x2), y: Math.min(m.y1, m.y2), w: Math.abs(m.x2 - m.x1), h: Math.abs(m.y2 - m.y1) };
   }
   get issues() { return determinismIssues(this.model); }
+  get afdErrors() { return this.issues.filter((i) => i.severity === 'error'); }
+  get afdNotes() { return this.issues.filter((i) => i.severity === 'note'); }
   get sigma(): string[] { return realSymbols(this.model); }
   get pickerSyms(): string[] { return this.space === 'afn' ? [...this.sigma, EPS] : this.sigma; }
   /** No AFN o painel não lista problemas de determinismo, só símbolos fora de Σ. */

@@ -145,42 +145,51 @@ export function trace(model: AutomatonModel, word: string): Trace | { error: str
 
 export interface DeterminismIssue {
   kind: 'no-initial' | 'multi-initial' | 'missing' | 'duplicate' | 'no-accepting' | 'epsilon' | 'foreign';
+  /**
+   * `error` impede o modelo de ser AFD; `note` é só informativo.
+   * A função de transição é parcial (Menezes): saída faltando não invalida o AFD,
+   * a palavra é rejeitada ao ler um símbolo sem transição definida.
+   */
+  severity: 'error' | 'note';
   message: string;
 }
 
-/** Aponta o que impede o modelo de ser um AFD (saída faltando/duplicada, ε, inicial, aceitação). */
+/** Aponta o que impede o modelo de ser um AFD (`error`) e o que vale saber sobre ele (`note`). */
 export function determinismIssues(model: AutomatonModel): DeterminismIssue[] {
   const issues: DeterminismIssue[] = [];
   if (model.states.length === 0) return issues;
   const inits = model.states.filter((s) => s.initial);
   if (inits.length === 0)
-    issues.push({ kind: 'no-initial', message: 'Nenhum estado inicial definido.' });
+    issues.push({ kind: 'no-initial', severity: 'error', message: 'Nenhum estado inicial definido.' });
   else if (inits.length > 1)
-    issues.push({ kind: 'multi-initial', message: `Há ${inits.length} estados iniciais; um AFD tem exatamente um.` });
+    issues.push({ kind: 'multi-initial', severity: 'error', message: `Há ${inits.length} estados iniciais; um AFD tem exatamente um.` });
 
   if (model.transitions.some((t) => t.symbols.includes(EPS)))
-    issues.push({ kind: 'epsilon', message: 'Há transições-ε; um AFD não pode ter transição vazia.' });
+    issues.push({ kind: 'epsilon', severity: 'error', message: 'Há transições-ε; um AFD não pode ter transição vazia.' });
 
   const sigma = realSymbols(model);
   const foreign = new Set(
     model.transitions.flatMap((t) => t.symbols).filter((s) => s !== EPS && !sigma.includes(s)),
   );
   for (const sym of foreign)
-    issues.push({ kind: 'foreign', message: `O símbolo "${sym}" é usado em transições mas não está em Σ.` });
+    issues.push({ kind: 'foreign', severity: 'error', message: `O símbolo "${sym}" é usado em transições mas não está em Σ.` });
 
   for (const s of model.states) {
+    const missing: string[] = [];
     for (const sym of sigma) {
       const count = model.transitions.filter(
         (t) => t.from === s.id && t.symbols.includes(sym),
       ).length;
-      if (count === 0)
-        issues.push({ kind: 'missing', message: `"${s.name}" não tem saída para ${sym}.` });
+      if (count === 0) missing.push(sym);
       else if (count > 1)
-        issues.push({ kind: 'duplicate', message: `"${s.name}" tem ${count} saídas para ${sym} (não-determinístico).` });
+        issues.push({ kind: 'duplicate', severity: 'error', message: `"${s.name}" tem ${count} saídas para ${sym} (não-determinístico).` });
     }
+    // uma nota por estado, não por símbolo, para o painel não inflar com Σ grande
+    if (missing.length)
+      issues.push({ kind: 'missing', severity: 'note', message: `"${s.name}" não tem saída para ${missing.join(', ')}: ler esse símbolo ali rejeita a palavra.` });
   }
   if (!model.states.some((s) => s.accepting))
-    issues.push({ kind: 'no-accepting', message: 'Nenhum estado de aceitação — o autômato rejeita tudo.' });
+    issues.push({ kind: 'no-accepting', severity: 'note', message: 'Nenhum estado de aceitação: o autômato reconhece a linguagem vazia (∅).' });
   return issues;
 }
 

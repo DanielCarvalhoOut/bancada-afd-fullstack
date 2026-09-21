@@ -4,7 +4,7 @@
  */
 import { strict as assert } from 'node:assert';
 import {
-  AutomatonModel, EPS, determinize, equivalence, parseAlphabet, simulateNfa, validateAlphabet,
+  AutomatonModel, EPS, determinismIssues, determinize, equivalence, parseAlphabet, simulateNfa, validateAlphabet,
 } from '../src/domain/automaton';
 
 function acceptsAny(m: AutomatonModel, w: string): boolean {
@@ -114,5 +114,20 @@ assert.ok('error' in (validateAlphabet([' ']) as object));
 assert.ok('error' in (parseAlphabet('a,,b') as object));
 assert.deepEqual(parseAlphabet('a, b,'), ['a', 'b']);
 assert.deepEqual(parseAlphabet('a b'), ['a', 'b']);
+
+// 7) δ parcial: saída faltando e falta de aceitação são notas, não erros de AFD
+const partial: AutomatonModel = {
+  kind: 'afd', alphabet: ['a', 'b'],
+  states: [st('i', true, false), st('f', false, false)],
+  transitions: [{ from: 'i', to: 'f', symbols: ['a'] }],
+};
+const partialIssues = determinismIssues(partial);
+const missing = partialIssues.filter((i) => i.kind === 'missing');
+assert.equal(missing.length, 2, 'uma nota por estado'); // i sem b; f sem a, b
+assert.ok(missing[1].message.includes('a, b'));
+assert.ok(partialIssues.some((i) => i.kind === 'no-accepting'));
+assert.ok(partialIssues.every((i) => i.severity === 'note'), 'δ parcial não pode invalidar o AFD');
+const dup: AutomatonModel = { ...partial, transitions: [...partial.transitions, { from: 'i', to: 'i', symbols: ['a'] }] };
+assert.ok(determinismIssues(dup).some((i) => i.kind === 'duplicate' && i.severity === 'error'));
 
 console.log('automaton.check: ok');
