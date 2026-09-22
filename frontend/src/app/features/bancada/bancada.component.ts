@@ -95,6 +95,10 @@ export class BancadaComponent implements OnInit {
   railOpen = true;
   panelOpen = true;
 
+  // referência lado a lado (somente leitura) — para conferir enquanto monta
+  refModel: AutomatonModel | null = null;
+  refName = '';
+
   // picker de símbolos
   picker: { from: string; to: string; chosen: string[] } | null = null;
 
@@ -581,6 +585,15 @@ export class BancadaComponent implements OnInit {
     if (a.kind !== this.space) this.switchSpace(a.kind); else { this.reset(); this.fit(); }
     this.touch();
   }
+  /** Abre um autômato salvo ao lado, como referência de leitura (gabarito). */
+  openAsReference(a: SavedAutomaton, ev: Event): void {
+    ev.stopPropagation();
+    this.refModel = { ...a.model, kind: a.kind };
+    this.refName = a.name;
+    this.libModal = false;
+  }
+  closeReference(): void { this.refModel = null; this.refName = ''; }
+  get refLayout(): Layout | null { return this.refModel ? computeLayout(this.refModel, {}) : null; }
   /** Compara o autômato ativo com um salvo (gabarito) no servidor. */
   compareWith(a: SavedAutomaton, ev: Event): void {
     ev.stopPropagation();

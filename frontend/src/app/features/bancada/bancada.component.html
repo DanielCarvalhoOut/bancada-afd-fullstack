@@ -56,6 +56,35 @@
       </button>
     </div>
 
+    <!-- REFERÊNCIA (leitura, lado a lado) -->
+    <div class="refpanel" *ngIf="refModel">
+      <div class="refhead">
+        <span class="reftitle" [title]="refName">{{ refName }}</span>
+        <button class="xbtn" (click)="closeReference()" title="Fechar referência" aria-label="Fechar referência">&times;</button>
+      </div>
+      <svg class="refstage" *ngIf="refLayout as rl" [attr.viewBox]="rl.viewBox" preserveAspectRatio="xMidYMid meet">
+        <defs>
+          <marker id="ahref" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M0 0 L10 5 L0 10 z" class="edge-arrowhead"></path>
+          </marker>
+        </defs>
+        <ng-container *ngFor="let e of rl.edges">
+          <path [attr.d]="e.d" class="edge" [class.eps]="e.eps" marker-end="url(#ahref)"></path>
+          <rect class="edge-label-bg" [attr.x]="e.lx - e.labelW/2" [attr.y]="e.ly - 8" [attr.width]="e.labelW" height="15" rx="3"></rect>
+          <text class="edge-label" [class.eps]="e.eps" [attr.x]="e.lx" [attr.y]="e.ly + 4" text-anchor="middle">{{ e.label }}</text>
+        </ng-container>
+        <path *ngIf="rl.start" class="start-arrow" marker-end="url(#ahref)" [attr.d]="'M ' + rl.start.x1 + ' ' + rl.start.y1 + ' L ' + rl.start.x2 + ' ' + rl.start.y2"></path>
+        <g *ngFor="let n of rl.nodes" class="st-node">
+          <ng-container *ngIf="n.accepting; else refplain">
+            <circle [attr.cx]="n.x" [attr.cy]="n.y" [attr.r]="28" class="st-accept"></circle>
+            <circle [attr.cx]="n.x" [attr.cy]="n.y" [attr.r]="23" class="st-accept-ring"></circle>
+          </ng-container>
+          <ng-template #refplain><circle [attr.cx]="n.x" [attr.cy]="n.y" [attr.r]="28" class="st-normal"></circle></ng-template>
+          <text class="st-label" [attr.x]="n.x" [attr.y]="n.y + 4.5" text-anchor="middle">{{ n.name }}</text>
+        </g>
+      </svg>
+    </div>
+
     <div class="stage-wrap">
       <div class="hint" *ngIf="hint">{{ hint }}</div>
       <div class="watermark mono">{{ space==='afd' ? 'AFD' : 'AFN' }}</div>
@@ -303,6 +332,7 @@
           <div class="lib-name">{{ a.name }}</div>
           <div class="lib-meta mono">{{ a.stateCount }} estados</div>
         </div>
+        <button class="tbtn lib-ref" (click)="openAsReference(a, $event)" title="Abrir ao lado como referência (leitura)">Ao lado</button>
         <button class="tbtn lib-cmp" (click)="compareWith(a, $event)" title="Comparar o {{ space==='afd' ? 'AFD' : 'AFN' }} atual com este">Comparar</button>
         <button class="lib-del" (click)="deleteSaved(a, $event)" title="Excluir">&times;</button>
       </div>

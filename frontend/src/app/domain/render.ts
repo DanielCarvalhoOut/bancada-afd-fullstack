@@ -43,16 +43,35 @@ function edgeGeom(m: AutomatonModel, t: AutomatonTransition): { d: string; lx: n
     };
   }
   const dx = b.x - a.x, dy = b.y - a.y, d = Math.hypot(dx, dy) || 1, ux = dx / d, uy = dy / d;
+  const px = -uy, py = ux; // perpendicular unitário à reta A→B
   const rev = m.transitions.some((q) => q.from === t.to && q.to === t.from);
+
+  // Deslocamento perpendicular (assinado) do ponto de controle. 0 = reta.
+  let off = 0;
   if (rev) {
-    const mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2, px = -uy, py = ux, off = 34;
-    const cxp = mx + px * off, cyp = my + py * off;
-    return {
-      d: `M ${a.x + ux * R} ${a.y + uy * R} Q ${cxp} ${cyp} ${b.x - ux * R} ${b.y - uy * R}`,
-      lx: cxp, ly: cyp - 2,
-    };
+    // par bidirecional: mesma magnitude, mas o sinal do perpendicular inverte
+    // com o sentido, então A→B e B→A curvam para lados opostos e se separam.
+    off = 34;
+  } else {
+    // a reta passa por cima de outro estado? desvia para o lado oposto a ele,
+    // com folga suficiente para o arco limpar o nó (senão as linhas se sobrepõem).
+    let worst: number | null = null, worstAbs = Infinity;
+    for (const s of m.states) {
+      if (s.id === a.id || s.id === b.id) continue;
+      const proj = (s.x - a.x) * ux + (s.y - a.y) * uy; // projeção no segmento
+      if (proj <= 10 || proj >= d - 10) continue;         // fora do trecho útil
+      const perp = (s.x - a.x) * px + (s.y - a.y) * py;   // distância assinada à reta
+      if (Math.abs(perp) < R + 16 && Math.abs(perp) < worstAbs) { worstAbs = Math.abs(perp); worst = perp; }
+    }
+    if (worst !== null) off = (worst >= 0 ? -1 : 1) * (R + 48);
   }
+
   const x1 = a.x + ux * R, y1 = a.y + uy * R, x2 = b.x - ux * R, y2 = b.y - uy * R;
+  if (off !== 0) {
+    const mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2;
+    const cxp = mx + px * off, cyp = my + py * off;
+    return { d: `M ${x1} ${y1} Q ${cxp} ${cyp} ${x2} ${y2}`, lx: cxp, ly: cyp - 2 };
+  }
   return { d: `M ${x1} ${y1} L ${x2} ${y2}`, lx: (x1 + x2) / 2 - uy * 12, ly: (y1 + y2) / 2 + ux * 12 };
 }
 
