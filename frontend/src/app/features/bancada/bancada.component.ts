@@ -15,6 +15,10 @@ import {
 } from '../../domain/automaton';
 import { computeLayout, Layout, R } from '../../domain/render';
 
+/** Escapa texto do usuário (nomes de estado, palavra, erros) antes de montar o HTML da simulação. */
+const esc = (s: unknown) =>
+  String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]!);
+
 type Mode = 'idle' | 'addState' | 'addTrans' | 'select';
 const STORAGE = 'bancada-aut-v2';
 
@@ -230,6 +234,8 @@ export class BancadaComponent implements OnInit {
     return { x: Math.min(m.x1, m.x2), y: Math.min(m.y1, m.y2), w: Math.abs(m.x2 - m.x1), h: Math.abs(m.y2 - m.y1) };
   }
   get issues() { return determinismIssues(this.model); }
+  get afdErrors() { return this.issues.filter((i) => i.severity === 'error'); }
+  get afdNotes() { return this.issues.filter((i) => i.severity === 'note'); }
   get sigma(): string[] { return realSymbols(this.model); }
   get pickerSyms(): string[] { return this.space === 'afn' ? [...this.sigma, EPS] : this.sigma; }
   /** No AFN o painel não lista problemas de determinismo, só símbolos fora de Σ. */
@@ -450,20 +456,21 @@ export class BancadaComponent implements OnInit {
     const w = this.simWord.trim();
     if (this.space === 'afd') {
       const r = localTrace(this.model, w);
-      if ('error' in r) { this.simHtml = `<p class="verdict no">${r.error}</p>`; return; }
+      if ('error' in r) { this.simHtml = `<p class="verdict no">${esc(r.error)}</p>`; return; }
+      const syms = [...w]; // por code point, como o trace lê a palavra
       let h = '<div class="trace">';
-      r.path.forEach((p, i) => { h += `<span>${p}</span>`; if (i < r.path.length - 1) h += `<span class="dim"> --${w[i]}--&gt; </span>`; });
+      r.path.forEach((p, i) => { h += `<span>${esc(p)}</span>`; if (i < r.path.length - 1) h += `<span class="dim"> --${esc(syms[i])}--&gt; </span>`; });
       h += '</div>';
-      if (r.broke) h += `<p class="verdict no">Travou em “${r.finalState}” (sem saída para “${r.brokeSym}”).</p>`;
-      else if (r.accepted) h += `<p class="verdict ok">Terminou em “${r.finalState}”, de aceitação → ACEITA${w === '' ? ' a vazia' : ''}.</p>`;
-      else h += `<p class="verdict no">Terminou em “${r.finalState}”, não-aceitação → REJEITA${w === '' ? ' a vazia' : ''}.</p>`;
+      if (r.broke) h += `<p class="verdict no">Travou em “${esc(r.finalState)}” (sem saída para “${esc(r.brokeSym)}”).</p>`;
+      else if (r.accepted) h += `<p class="verdict ok">Terminou em “${esc(r.finalState)}”, de aceitação → ACEITA${w === '' ? ' a vazia' : ''}.</p>`;
+      else h += `<p class="verdict no">Terminou em “${esc(r.finalState)}”, não-aceitação → REJEITA${w === '' ? ' a vazia' : ''}.</p>`;
       this.simHtml = h;
       this.active = r.finalState ? this.model.states.filter((s) => s.name === r.finalState).map((s) => s.id) : [];
     } else {
       const r = simulateNfa(this.model, w);
-      if ('error' in r) { this.simHtml = `<p class="verdict no">${r.error}</p>`; return; }
-      let seq = `<div class="setseq"><span class="st">${r.start.label}</span>`;
-      r.steps.forEach((st) => { seq += `<span class="op">--${st.sym}--&gt;</span><span class="st">${st.label}</span>`; });
+      if ('error' in r) { this.simHtml = `<p class="verdict no">${esc(r.error)}</p>`; return; }
+      let seq = `<div class="setseq"><span class="st">${esc(r.start.label)}</span>`;
+      r.steps.forEach((st) => { seq += `<span class="op">--${esc(st.sym)}--&gt;</span><span class="st">${esc(st.label)}</span>`; });
       seq += '</div>';
       const v = r.accepted
         ? `<p class="verdict ok">Algum caminho termina em aceitação → ACEITA${w === '' ? ' a vazia' : ''}.</p>`
