@@ -21,4 +21,16 @@ export class EditorStateService {
     this.pending = null;
     return p;
   }
+
+  /** Autômato só de leitura para o painel de referência (ex.: figura da Teoria). */
+  private reference: { name: string; kind: AutomatonKind; model: AutomatonModel } | null = null;
+
+  queueReference(name: string, kind: AutomatonKind, model: AutomatonModel): void {
+    this.reference = { name, kind, model: JSON.parse(JSON.stringify(model)) };
+  }
+  takeReference(): { name: string; kind: AutomatonKind; model: AutomatonModel } | null {
+    const r = this.reference;
+    this.reference = null;
+    return r;
+  }
 }

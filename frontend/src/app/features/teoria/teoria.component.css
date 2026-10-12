@@ -1,0 +1,113 @@
+:host{ display:block; min-height:100vh; background:var(--bg); --top:56px; --serif:"IBM Plex Serif", Georgia, "Times New Roman", serif; }
+a{ text-decoration:none; color:inherit; }
+kbd{ font-family:"IBM Plex Mono",monospace; font-size:10.5px; padding:1px 5px; border:1px solid var(--line); border-bottom-width:2px; border-radius:4px; color:var(--ink-dim); background:var(--surface-2); }
+
+/* ───── topbar ───── */
+.topbar{ position:sticky; top:0; z-index:30; height:var(--top); display:flex; align-items:center; gap:8px; padding:0 14px; background:var(--bg); border-bottom:1px solid var(--line); }
+.iconbtn.active{ border-color:var(--accent); color:var(--accent); }
+.brand{ font-size:13px; font-weight:600; letter-spacing:.06em; padding:0 4px 0 6px; }
+.where{ font-size:12px; color:var(--ink-dim); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; min-width:0; padding-left:10px; border-left:1px solid var(--line); }
+.spacer{ flex:1; }
+.toc-toggle{ display:none; }
+.defs{ position:absolute; width:0; height:0; overflow:hidden; }
+
+/* ───── layout ───── */
+.layout{ display:grid; grid-template-columns:minmax(250px, 300px) minmax(0, 1fr); }
+
+/* ───── índice ───── */
+.toc{ position:sticky; top:var(--top); height:calc(100vh - var(--top)); overflow-y:auto; overscroll-behavior:contain; padding:16px 12px 40px 16px; border-right:1px solid var(--line); background:var(--bg-2); }
+.search{ display:flex; align-items:center; gap:8px; padding:0 10px; height:38px; border:1px solid var(--line); border-radius:9px; background:var(--surface); color:var(--ink-dim); margin-bottom:14px; }
+.search:focus-within{ border-color:var(--accent); }
+.search input{ flex:1; min-width:0; border:0; outline:0; background:transparent; color:var(--ink); font:inherit; font-size:13.5px; }
+.toc ol{ list-style:none; margin:0; padding:0; }
+.toc .n{ flex:none; min-width:26px; font-size:11px; color:var(--ink-faint); padding-top:2px; font-variant-numeric:tabular-nums; }
+.ch, .secs a, .res a{ display:flex; gap:8px; padding:7px 8px; border-radius:7px; line-height:1.35; }
+.ch{ font-size:13.5px; font-weight:500; color:var(--ink-dim); }
+.ch:hover, .secs a:hover, .res a:hover{ background:var(--surface-2); color:var(--ink); }
+.here > .ch{ color:var(--ink); }
+.here > .ch .n{ color:var(--accent); }
+.secs{ margin:2px 0 8px 14px !important; padding-left:10px !important; border-left:1px solid var(--line) !important; }
+.secs a{ font-size:13px; color:var(--ink-dim); padding:6px 8px; }
+.secs a.cur, .res a.cur{ background:var(--accent-soft); color:var(--ink); }
+.secs a.cur .n{ color:var(--accent); }
+.res-head{ font-size:10.5px; letter-spacing:.1em; text-transform:uppercase; color:var(--ink-faint); padding:0 8px 8px; }
+.res a{ font-size:13px; }
+.res b{ display:block; font-weight:500; color:var(--ink); }
+.res small{ display:block; font-size:11.5px; color:var(--ink-faint); margin-top:1px; }
+
+/* ───── página ───── */
+.page{ min-width:0; padding:40px clamp(16px, 5vw, 64px) 32px; }
+article, .pager, .foot{ max-width:720px; margin-inline:auto; }
+.eyebrow{ font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:var(--ink-faint); }
+h1{ margin:10px 0 0; font-size:clamp(26px, 3.6vw, 36px); font-weight:600; line-height:1.15; letter-spacing:-.012em; }
+h1 .num{ display:block; font-size:13px; font-weight:500; letter-spacing:.04em; color:var(--accent); margin-bottom:6px; }
+.lead{ font-family:var(--serif); font-style:italic; font-size:18px; color:var(--ink-dim); margin:14px 0 0; }
+article{ font-family:var(--serif); font-size:17px; line-height:1.72; }
+article > p, .prose-list{ margin:18px 0 0; }
+article :where(b){ font-weight:600; }
+article :where(code){ font-family:"IBM Plex Mono",monospace; font-size:.86em; background:var(--surface-2); border:1px solid var(--line-soft); padding:0 4px; border-radius:4px; }
+h2{ font-family:"IBM Plex Sans", system-ui, sans-serif; font-size:19px; font-weight:600; margin:36px 0 0; padding-top:18px; border-top:1px solid var(--line-soft); }
+.prose-list{ padding-left:1.4em; }
+.prose-list li + li{ margin-top:6px; }
+.prose-list li::marker{ color:var(--ink-faint); font-family:"IBM Plex Mono",monospace; font-size:.85em; }
+
+/* tabela */
+.tablewrap{ margin:22px 0 0; overflow-x:auto; border:1px solid var(--line); border-radius:10px; background:var(--surface); }
+table{ width:100%; border-collapse:collapse; font-family:"IBM Plex Sans", system-ui, sans-serif; font-size:14px; line-height:1.5; }
+th{ text-align:left; font-weight:600; font-size:11.5px; letter-spacing:.06em; text-transform:uppercase; color:var(--ink-dim); background:var(--surface-2); }
+th, td{ padding:9px 14px; vertical-align:top; border-bottom:1px solid var(--line-soft); }
+tbody tr:last-child td{ border-bottom:0; }
+td:first-child{ font-family:"IBM Plex Mono",monospace; font-size:13px; white-space:nowrap; }
+
+/* código / derivações */
+.code{ margin:22px 0 0; padding:14px 16px; background:var(--code-bg); border:1px solid var(--line); border-radius:10px; font-size:13.5px; line-height:1.65; overflow-x:auto; white-space:pre; }
+
+/* notas: cor = tipo (definição, dica, cuidado, exemplo) */
+.note{ --k:var(--accent); margin:22px 0 0; padding:12px 16px 14px; border:1px solid var(--line); border-left:3px solid var(--k); border-radius:4px 10px 10px 4px; background:var(--surface); }
+.note[data-kind="tip"]{ --k:var(--ok); }
+.note[data-kind="warn"]{ --k:var(--trap); background:var(--trap-fill); }
+.note[data-kind="ex"]{ --k:var(--afn); }
+.note[data-kind="def"]{ --k:var(--afd); }
+.note-k{ font-size:10.5px; font-weight:600; letter-spacing:.1em; text-transform:uppercase; color:var(--k); }
+.note-k span{ letter-spacing:.04em; text-transform:none; font-size:12px; color:var(--ink); }
+.note-b{ margin-top:4px; font-size:16px; line-height:1.65; }
+
+/* figura: autômato real, desenhado pelo motor da bancada */
+.fig{ margin:24px 0 0; border:1px solid var(--line); border-radius:12px; overflow:hidden; background:var(--surface); }
+.stage{ background-color:var(--bg); background-image:radial-gradient(var(--grid) 1.2px, transparent 1.2px); background-size:18px 18px; padding:10px; display:flex; justify-content:center; }
+.stage svg{ display:block; max-width:100%; height:auto; }
+figcaption{ display:flex; flex-wrap:wrap; align-items:center; gap:8px 10px; padding:10px 12px; border-top:1px solid var(--line); font-family:"IBM Plex Sans", system-ui, sans-serif; font-size:13.5px; line-height:1.45; }
+.tag{ font-size:10.5px; font-weight:600; letter-spacing:.06em; padding:2px 7px; border-radius:5px; color:var(--afd); background:var(--accent-soft); border:1px solid var(--afd); }
+.fig[data-kind="afn"] .tag{ color:var(--afn); border-color:var(--afn); background:transparent; }
+.cap{ flex:1 1 220px; color:var(--ink-dim); }
+.acts{ display:flex; gap:6px; }
+.mini{ font-size:12px; font-weight:500; padding:5px 10px; border-radius:7px; border:1px solid var(--line); background:var(--surface-2); }
+.mini:hover{ border-color:var(--accent); color:var(--accent); }
+
+/* paginação */
+.pager{ display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:48px; }
+.pg{ display:flex; flex-direction:column; gap:4px; padding:14px 16px; border:1px solid var(--line); border-radius:10px; background:var(--surface); transition:border-color .15s; }
+.pg:hover{ border-color:var(--accent); }
+.pg small{ font-size:11px; color:var(--accent); letter-spacing:.04em; }
+.pg span{ font-weight:500; font-size:14.5px; }
+.pg.next{ text-align:right; grid-column:2; }
+.foot{ margin-top:18px; font-size:11px; color:var(--ink-faint); text-align:center; }
+
+:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
+
+/* ───── celular / tablet: índice vira gaveta ───── */
+@media (max-width:900px){
+  .layout{ grid-template-columns:minmax(0, 1fr); }
+  .toc-toggle{ display:inline-flex; }
+  .toc{ position:fixed; left:0; top:var(--top); bottom:0; height:auto; width:min(320px, 86vw); z-index:25; transform:translateX(-102%); transition:transform .22s ease; box-shadow:var(--shadow); }
+  .toc.open{ transform:none; }
+  .scrim{ position:fixed; inset:var(--top) 0 0 0; z-index:24; background:rgba(0,0,0,.45); }
+  .page{ padding-top:28px; }
+}
+@media (max-width:560px){
+  .where, .tbtn .lbl, .foot{ display:none; }
+  article{ font-size:16px; }
+  .pager{ grid-template-columns:1fr; }
+  .pg.next{ grid-column:1; }
+}
+@media (prefers-reduced-motion:reduce){ .toc, .pg{ transition:none; } }

@@ -145,6 +145,11 @@ export class BancadaComponent implements OnInit {
       this.space = pending.kind;
       this.automata[pending.kind] = { ...pending.model, kind: pending.kind };
     }
+    const ref = this.editor.takeReference();
+    if (ref) {
+      this.refModel = { ...ref.model, kind: ref.kind };
+      this.refName = ref.name;
+    }
     this.seedIfEmpty();
     this.persist();
     this.fit();
@@ -637,6 +642,7 @@ export class BancadaComponent implements OnInit {
 
   // ---------- navegação ----------
   toPortal(): void { this.router.navigate(['/']); }
+  toTeoria(): void { this.router.navigate(['/teoria']); }
 
   private seedIfEmpty(): void {
     if (this.model.states.length) return;

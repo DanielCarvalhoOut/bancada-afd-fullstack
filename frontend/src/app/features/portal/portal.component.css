@@ -33,5 +33,17 @@
 .diagram-mini{ position:absolute; right:22px; top:22px; color:var(--ink-faint); opacity:.7; }
 .choice:hover .diagram-mini{ color:var(--sp); opacity:1; }
 
+.bookcard{ display:flex; align-items:center; gap:18px; margin:16px 30px 0; padding:18px 22px; background:var(--surface); border:1px solid var(--line); border-radius:12px; color:var(--ink); text-decoration:none; transition:border-color .2s, transform .12s; }
+.bookcard:hover{ border-color:var(--ink-dim); transform:translateY(-2px); }
+.bookcard:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
+.bookglyph{ flex:none; color:var(--ink-dim); }
+.bk-txt{ flex:1; min-width:0; }
+.bk-title{ font-weight:600; font-size:18px; }
+.bk-title span{ font-size:10.5px; font-weight:500; letter-spacing:.08em; text-transform:uppercase; color:var(--ink-faint); margin-left:8px; }
+.bk-desc{ margin-top:4px; font-size:13.5px; color:var(--ink-dim); line-height:1.55; max-width:80ch; }
+.bk-go{ flex:none; display:inline-flex; align-items:center; gap:8px; font-size:11.5px; letter-spacing:.05em; text-transform:uppercase; color:var(--ink-dim); }
+.bookcard:hover .bk-go{ color:var(--ink); }
+@media (max-width:720px){ .bookcard{ flex-wrap:wrap; } .bk-go{ width:100%; } }
+
 .portal-foot{ display:flex; flex-wrap:wrap; gap:8px 22px; padding:22px 30px 26px; margin-top:auto; font-family:"IBM Plex Mono",monospace; font-size:11px; letter-spacing:.06em; text-transform:uppercase; color:var(--ink-faint); }
 .portal-foot span b{ color:var(--ink-dim); font-weight:500; }

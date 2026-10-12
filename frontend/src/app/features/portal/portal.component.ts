@@ -1,13 +1,14 @@
 import { Component } from '@angular/core';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { EditorStateService } from '../../core/services/editor-state.service';
 import { AutomatonKind } from '../../core/models/api.model';
 import { ThemeService } from '../../core/services/theme.service';
 
-/** Portal: escolhe entre o espaço determinístico (AFD) e o não determinístico (AFN). */
+/** Portal: escolhe entre o espaço determinístico (AFD) e o não determinístico (AFN), ou abre a Teoria. */
 @Component({
   selector: 'app-portal',
   standalone: true,
+  imports: [RouterLink],
   templateUrl: './portal.component.html',
   styleUrl: './portal.component.css',
 })
