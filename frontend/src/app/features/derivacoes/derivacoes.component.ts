@@ -8,10 +8,11 @@ import {
   checkDerivation, checkTree, classify, derivationToTree, isNT, parseGrammar,
   parseTree, searchLeftmost, serializeTree, showForm, showProd, tokenizeForm, treeToLeftmost,
 } from '../../domain/grammar';
-import { PRESETS } from './presets';
+import { ATIVIDADES } from '../../core/atividades';
+import { PRESETS, PRESET_GROUPS, groupOf } from './presets';
 
 const STORE_KEY = 'bancada-derivacoes-v1';
-interface Saved { preset: string; grammar: string; word: string; steps: string; tree: string }
+interface Saved { group: string; preset: string; grammar: string; word: string; steps: string; tree: string }
 
 function load(): Saved | null {
   try {
@@ -20,7 +21,7 @@ function load(): Saved | null {
     const v = JSON.parse(raw) as Partial<Saved>;
     // conteúdo do storage também é entrada não confiável: só strings, com teto
     const s = (x: unknown, max: number) => (typeof x === 'string' ? x.slice(0, max) : '');
-    return { preset: s(v.preset, 40), grammar: s(v.grammar, 4000), word: s(v.word, 200), steps: s(v.steps, 6000), tree: s(v.tree, 4000) };
+    return { group: s(v.group, 40), preset: s(v.preset, 40), grammar: s(v.grammar, 4000), word: s(v.word, 200), steps: s(v.steps, 6000), tree: s(v.tree, 4000) };
   } catch { return null; }
 }
 
@@ -40,11 +41,23 @@ function load(): Saved | null {
 export class DerivacoesComponent {
   readonly theme = inject(ThemeService);
   readonly pdf = inject(PdfWindowService);
-  readonly presets = PRESETS;
+  readonly groups = PRESET_GROUPS;
   readonly EPS = EPS;
 
   private readonly saved = load();
-  readonly presetId = signal(this.saved?.preset ?? PRESETS[0].id);
+  // Vindo de um exercício ("Abrir em Derivações") o preset chega vazio: se a
+  // gramática e a palavra batem com uma questão conhecida, seleciona ela.
+  readonly presetId = signal(
+    this.saved
+      ? this.saved.preset || (PRESETS.find((p) => p.grammar === this.saved!.grammar && p.word === this.saved!.word)?.id ?? '')
+      : PRESETS[0].id,
+  );
+  /** Atividade escolhida; continua valendo quando a gramática é editada (questão "personalizada"). */
+  readonly groupId = signal(
+    groupOf(this.presetId())?.id ?? PRESET_GROUPS.find((g) => g.id === this.saved?.group)?.id ?? PRESET_GROUPS[0].id,
+  );
+  readonly group = computed(() => PRESET_GROUPS.find((g) => g.id === this.groupId()) ?? PRESET_GROUPS[0]);
+  readonly atividade = computed(() => ATIVIDADES.find((a) => a.id === this.group().atividade) ?? null);
   readonly grammarText = signal(this.saved?.grammar ?? PRESETS[0].grammar);
   readonly word = signal(this.saved?.word ?? PRESETS[0].word);
   readonly stepsText = signal(this.saved?.steps ?? 'R');
@@ -104,12 +117,22 @@ export class DerivacoesComponent {
   });
   constructor() {
     effect(() => {
-      const data: Saved = { preset: this.presetId(), grammar: this.grammarText(), word: this.word(), steps: this.stepsText(), tree: this.treeText() };
+      const data: Saved = { group: this.groupId(), preset: this.presetId(), grammar: this.grammarText(), word: this.word(), steps: this.stepsText(), tree: this.treeText() };
       try { localStorage.setItem(STORE_KEY, JSON.stringify(data)); } catch { /* modo privado */ }
     });
   }
 
   // ─── ações: gramática ───
+  selectGroup(id: string): void {
+    const g = PRESET_GROUPS.find((x) => x.id === id);
+    if (!g) return;
+    this.groupId.set(g.id);
+    this.loadPreset(g.items[0].id);
+  }
+  openPdf(): void {
+    const a = this.atividade();
+    if (a) this.pdf.open(a);
+  }
   loadPreset(id: string): void {
     const p = PRESETS.find((x) => x.id === id);
     this.presetId.set(id);

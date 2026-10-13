@@ -24,12 +24,21 @@
     <aside class="panel gram">
       <div class="ph"><span class="k mono">1</span><h2>Gramática</h2></div>
 
-      <label class="lab mono" for="dv-preset">Exemplo</label>
+      <label class="lab mono" for="dv-group">Atividade</label>
+      <select id="dv-group" class="inp" [value]="groupId()" (change)="selectGroup($any($event.target).value)">
+        @for (gr of groups; track gr.id) { <option [value]="gr.id" [selected]="gr.id === groupId()">{{ gr.label }}</option> }
+      </select>
+
+      <label class="lab mono" for="dv-preset">Questão</label>
       <select id="dv-preset" class="inp" [value]="presetId()" (change)="loadPreset($any($event.target).value)">
-        @for (p of presets; track p.id) { <option [value]="p.id">{{ p.label }}</option> }
-        <option value="">Personalizada</option>
+        @for (p of group().items; track p.id) { <option [value]="p.id" [selected]="p.id === presetId()">{{ p.label }}</option> }
+        <option value="" [selected]="!preset()">Personalizada (gramática editada)</option>
       </select>
       @if (preset(); as p) { <p class="hint">{{ p.note }}</p> }
+      <div class="links">
+        @if (preset()?.section; as sec) { <a class="mini" [routerLink]="['/teoria', sec]">Ver exercício ↗</a> }
+        @if (atividade()) { <button type="button" class="mini" (click)="openPdf()">Abrir PDF da lista</button> }
+      </div>
 
       <label class="lab mono" for="dv-gram">Regras (uma por linha)</label>
       <textarea id="dv-gram" class="inp code" rows="6" spellcheck="false" maxlength="4000" autocomplete="off"
