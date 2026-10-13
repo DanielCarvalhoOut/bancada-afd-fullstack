@@ -1,0 +1,73 @@
+@if (svc.doc(); as d) {
+  @if (snap(); as s) { <div class="snap" [attr.data-side]="s" aria-hidden="true"></div> }
+
+  <section class="win" role="dialog" aria-modal="false" [attr.aria-label]="'PDF: ' + d.title"
+           [attr.data-mode]="svc.narrow() ? 'sheet' : svc.mode()" [class.min]="svc.minimized()" [class.busy]="dragging()"
+           [style.left.px]="box()?.x" [style.top.px]="box()?.y" [style.width.px]="box()?.w ?? dockStyleW()" [style.height.px]="box()?.h">
+
+    <header class="bar" (pointerdown)="onGrab($event)" (pointermove)="onDrag($event)" (pointerup)="onDrop()" (pointercancel)="onDrop()"
+            [title]="svc.narrow() ? '' : 'Arraste para mover; solte na borda para encaixar'">
+      <svg class="grip" width="12" height="16" viewBox="0 0 12 16" aria-hidden="true"><g fill="currentColor"><circle cx="3" cy="3" r="1.3"/><circle cx="9" cy="3" r="1.3"/><circle cx="3" cy="8" r="1.3"/><circle cx="9" cy="8" r="1.3"/><circle cx="3" cy="13" r="1.3"/><circle cx="9" cy="13" r="1.3"/></g></svg>
+      <div class="ttl">{{ d.title }}</div>
+      <div class="acts">
+        @if (!svc.narrow() && !svc.minimized()) {
+          <button class="ib" [class.on]="svc.mode() === 'left'" (click)="svc.setMode('left')" title="Encaixar à esquerda" aria-label="Encaixar à esquerda">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><rect x="3" y="4" width="7" height="16" rx="1.5" fill="currentColor" stroke="none" opacity=".55"/></svg>
+          </button>
+          <button class="ib" [class.on]="svc.mode() === 'float'" (click)="svc.setMode('float')" title="Janela flutuante" aria-label="Janela flutuante">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><rect x="8" y="8" width="10" height="8" rx="1.5" fill="currentColor" stroke="none" opacity=".55"/></svg>
+          </button>
+          <button class="ib" [class.on]="svc.mode() === 'right'" (click)="svc.setMode('right')" title="Encaixar à direita" aria-label="Encaixar à direita">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><rect x="14" y="4" width="7" height="16" rx="1.5" fill="currentColor" stroke="none" opacity=".55"/></svg>
+          </button>
+          <span class="sep" aria-hidden="true"></span>
+        }
+        <a class="ib" [href]="d.url" [attr.download]="d.fileName" title="Baixar PDF" aria-label="Baixar PDF">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11"/><path d="M7 10l5 5 5-5"/><path d="M5 20h14"/></svg>
+        </a>
+        <button class="ib" (click)="toggleMin()" [title]="svc.minimized() ? 'Restaurar' : 'Minimizar'" [attr.aria-label]="svc.minimized() ? 'Restaurar' : 'Minimizar'">
+          @if (svc.minimized()) {
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 15l6-6 6 6"/></svg>
+          } @else {
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg>
+          }
+        </button>
+        <button class="ib" (click)="svc.close()" title="Fechar" aria-label="Fechar PDF">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+        </button>
+      </div>
+    </header>
+
+    <div class="tools" [hidden]="svc.minimized()">
+      <button class="tb" (click)="zoomBy(1 / 1.2)" title="Diminuir zoom" aria-label="Diminuir zoom">−</button>
+      <button class="tb pct mono" (click)="fit()" [class.on]="fitWidth()" title="Ajustar à largura">{{ percent() }}%</button>
+      <button class="tb" (click)="zoomBy(1.2)" title="Aumentar zoom" aria-label="Aumentar zoom">+</button>
+      <span class="grow"></span>
+      <button class="tb" (click)="goTo(current() - 1)" [disabled]="current() <= 1" aria-label="Página anterior">‹</button>
+      <span class="mono pgn">{{ current() }} / {{ pages().length || '–' }}</span>
+      <button class="tb" (click)="goTo(current() + 1)" [disabled]="current() >= pages().length" aria-label="Próxima página">›</button>
+    </div>
+
+    <div class="scroller" #scroller [hidden]="svc.minimized()" tabindex="0" aria-label="Páginas do PDF"
+         (wheel)="onWheel($event)" (scroll)="onScroll()"
+         (pointerdown)="onPointerDown($event)" (pointermove)="onPointerMove($event)" (pointerup)="onPointerUp($event)" (pointercancel)="onPointerUp($event)">
+      @switch (status()) {
+        @case ('loading') { <div class="state mono">carregando…</div> }
+        @case ('error') { <div class="state">Não foi possível abrir o PDF aqui. <a [href]="d.url" target="_blank" rel="noopener">Abrir em outra aba</a>.</div> }
+      }
+      @for (p of pages(); track $index; let i = $index) {
+        <div class="pg" [style.width.px]="p.w * scale()" [style.height.px]="p.h * scale()">
+          <canvas [attr.data-page]="i + 1" [attr.aria-label]="'Página ' + (i + 1)"></canvas>
+        </div>
+      }
+    </div>
+
+    @if (!svc.narrow() && !svc.minimized()) {
+      @if (svc.mode() === 'float') {
+        <div class="rs corner" (pointerdown)="onResizeStart($event, 'corner')" (pointermove)="onResizeMove($event)" (pointerup)="onResizeEnd()" (pointercancel)="onResizeEnd()" aria-hidden="true"></div>
+      } @else {
+        <div class="rs edge" (pointerdown)="onResizeStart($event, 'edge')" (pointermove)="onResizeMove($event)" (pointerup)="onResizeEnd()" (pointercancel)="onResizeEnd()" aria-hidden="true"></div>
+      }
+    }
+  </section>
+}

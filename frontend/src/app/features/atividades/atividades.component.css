@@ -1,0 +1,35 @@
+:host{ display:block; min-height:100vh; background:var(--bg); }
+a{ text-decoration:none; }
+.topbar{ position:sticky; top:0; z-index:30; height:56px; display:flex; align-items:center; gap:8px; padding:0 14px; background:var(--bg); border-bottom:1px solid var(--line); }
+.brand{ font-size:13px; font-weight:600; letter-spacing:.06em; padding:0 6px; }
+.spacer{ flex:1; }
+.tbtn .sm{ display:none; }
+
+.wrap{ max-width:1080px; margin:0 auto; padding:32px clamp(16px, 4vw, 40px) 48px; }
+.eyebrow{ font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:var(--ink-faint); }
+h1{ margin:8px 0 0; font-size:clamp(26px, 4vw, 38px); font-weight:600; letter-spacing:-.012em; }
+.sub{ margin:12px 0 0; max-width:70ch; font-size:15px; line-height:1.6; color:var(--ink-dim); }
+
+.grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(min(100%, 460px), 1fr)); gap:16px; margin-top:26px; }
+.card{ display:flex; gap:18px; padding:18px; background:var(--surface); border:1px solid var(--line); border-radius:12px; }
+.card.open{ border-color:var(--accent); }
+.thumb{ flex:none; }
+.body{ flex:1; min-width:0; }
+.subj{ font-size:10.5px; letter-spacing:.08em; text-transform:uppercase; color:var(--ink-faint); }
+h2{ margin:6px 0 0; font-size:18px; font-weight:600; line-height:1.25; color:var(--ink); }
+.desc{ margin:8px 0 0; font-size:13.5px; line-height:1.55; color:var(--ink-dim); }
+.topics{ display:flex; flex-wrap:wrap; gap:5px; margin-top:10px; }
+.topic{ font-size:11.5px; padding:2px 8px; border-radius:99px; border:1px solid var(--line); color:var(--ink-dim); }
+.meta{ margin-top:10px; font-size:11.5px; color:var(--ink-faint); }
+.acts{ display:flex; flex-wrap:wrap; gap:8px; margin-top:14px; }
+.sol{ display:flex; flex-wrap:wrap; gap:6px 12px; align-items:baseline; margin-top:14px; padding-top:12px; border-top:1px solid var(--line-soft); font-size:13px; }
+.sol .mono{ font-size:11px; color:var(--ink-faint); }
+.sol a{ color:var(--accent); }
+.sol a:hover{ text-decoration:underline; }
+
+@media (max-width:560px){
+  .card{ flex-direction:column; gap:12px; }
+  .tbtn .lbl{ display:none; }
+  .tbtn .sm{ display:inline; }
+  .acts .tbtn{ flex:1; justify-content:center; }
+}

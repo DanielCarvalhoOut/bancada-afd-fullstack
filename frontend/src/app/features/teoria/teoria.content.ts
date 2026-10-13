@@ -538,6 +538,31 @@ export const CHAPTERS: Chapter[] = [
           { t: 'p', html: 'Exemplo clássico: E → E + E | E * E | id gera id + id * id de dois jeitos, um agrupando (id + id) * id e outro id + (id * id). Para provar que uma palavra é gerada, basta uma árvore; a ambiguidade só importa quando a estrutura (o significado) interessa.' },
         ],
       },
+      {
+        id: 'gram-conferir',
+        title: 'Conferindo derivações e árvores',
+        blocks: [
+          { t: 'p', html: 'Derivação e árvore são duas formas de mostrar a mesma coisa. A derivação diz a <b>ordem</b> em que as regras foram aplicadas; a árvore mostra só a <b>estrutura</b> (qual regra expandiu cada não terminal). Várias derivações (em ordens diferentes) podem dar a mesma árvore; a derivação <b>mais à esquerda</b> de uma árvore é única.' },
+          { t: 'h', text: 'Checklist da derivação' },
+          { t: 'list', ordered: true, items: [
+            'Começa no <b>símbolo de partida</b> (4º elemento da tupla).',
+            'Em cada ⇒, exatamente <b>um</b> não terminal é trocado pelo lado direito de <b>uma regra dele</b>; o resto da forma fica igual.',
+            'Terminais nunca mudam. Se dois não terminais mudaram de uma vez, faltou escrever um passo (isso seria ⇒*).',
+            'Termina numa <b>sentença</b> (só terminais) igual à palavra pedida.',
+            'Se a questão pede “mais à esquerda”, em todo passo o trocado é o primeiro não terminal da forma.',
+          ] },
+          { t: 'h', text: 'Checklist da árvore' },
+          { t: 'list', ordered: true, items: [
+            'A raiz é o símbolo de partida.',
+            'Cada nó interno A tem como filhos, da esquerda para a direita, exatamente o lado direito de uma regra A → α.',
+            'A regra A → ε aparece como A com um único filho ε.',
+            'Terminais e ε são folhas; não terminal em folha = árvore incompleta (a fronteira ainda é forma sentencial).',
+            'A <b>fronteira</b> (folhas lidas da esquerda para a direita, sem ε) é a palavra.',
+          ] },
+          { t: 'code', text: 'Notação com colchetes (a mesma da página de derivações):\n\nR[X[a] R[S[a T[X[b]] a]] X[a]]   →  fronteira: aabaa' },
+          { t: 'note', kind: 'tip', html: 'Na página <b>Derivações</b> (link no índice) você escreve a derivação ou monta a árvore clicando nos nós, e cada passo é conferido: a regra usada, onde o passo quebrou, se é mais à esquerda e se a fronteira chega na palavra.' },
+        ],
+      },
     ],
   },
 

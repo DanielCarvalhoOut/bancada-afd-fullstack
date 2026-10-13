@@ -1,6 +1,6 @@
 :host{ display:block; }
 /* trava seleção de texto/callout: no toque, tocar estados não deve "selecionar a tela" */
-.work{ position:fixed; inset:0; display:flex; flex-direction:column; user-select:none; -webkit-user-select:none; -webkit-touch-callout:none; }
+.work{ position:fixed; inset:0 var(--dock-r, 0px) 0 var(--dock-l, 0px); display:flex; flex-direction:column; user-select:none; -webkit-user-select:none; -webkit-touch-callout:none; }
 .work input, .work textarea{ user-select:text; -webkit-user-select:text; }
 
 .topbar{ display:flex; align-items:center; gap:12px; padding:11px 18px; border-bottom:1px solid var(--line); background:var(--surface); flex:none; flex-wrap:wrap; }
@@ -146,3 +146,6 @@
 .sigma-note{ margin:6px 0 4px; font-size:12px; }
 .file-pick{ display:inline-flex; margin-bottom:10px; cursor:pointer; }
 .import-msg{ font-size:12.5px; margin-top:10px; line-height:1.5; }
+
+/* atalhos extras do topo: somem no celular para a barra não quebrar em duas linhas */
+@media (max-width:600px){ .xnav{ display:none; } }

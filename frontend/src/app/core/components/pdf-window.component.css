@@ -1,0 +1,55 @@
+:host{ display:contents; }
+a{ color:inherit; }
+
+.win{ position:fixed; z-index:55; display:flex; flex-direction:column; background:var(--surface); border:1px solid var(--line); box-shadow:var(--shadow), 0 24px 60px -20px rgba(0,0,0,.55); overflow:hidden; color:var(--ink); }
+.win[data-mode="float"]{ border-radius:12px; min-width:280px; min-height:44px; }
+.win[data-mode="left"]{ top:0; bottom:0; left:0; border-width:0 1px 0 0; }
+.win[data-mode="right"]{ top:0; bottom:0; right:0; border-width:0 0 0 1px; }
+.win[data-mode="sheet"]{ left:0; right:0; bottom:0; height:min(68vh, 640px); border-radius:14px 14px 0 0; border-width:1px 0 0; }
+.win.busy{ user-select:none; -webkit-user-select:none; }
+.win.busy .scroller{ pointer-events:none; }
+
+/* minimizada: só a barra, num canto */
+.win.min{ top:auto !important; left:auto !important; right:16px; bottom:16px; width:min(340px, calc(100vw - 32px)) !important; height:auto !important; border-radius:12px; border-width:1px; }
+
+.bar{ flex:none; display:flex; align-items:center; gap:8px; height:44px; padding:0 6px 0 10px; border-bottom:1px solid var(--line); background:var(--bg-2); cursor:grab; touch-action:none; }
+.win[data-mode="sheet"] .bar{ cursor:default; touch-action:auto; }
+.win.busy .bar{ cursor:grabbing; }
+.grip{ flex:none; color:var(--ink-faint); }
+.ttl{ flex:1; min-width:0; font-size:13px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.acts{ flex:none; display:flex; align-items:center; gap:2px; }
+.sep{ width:1px; height:18px; background:var(--line); margin:0 4px; }
+.ib{ width:30px; height:30px; display:inline-flex; align-items:center; justify-content:center; border-radius:7px; border:1px solid transparent; background:transparent; color:var(--ink-dim); text-decoration:none; }
+.ib:hover{ background:var(--surface-2); color:var(--ink); }
+.ib.on{ color:var(--accent); border-color:var(--accent); background:var(--accent-soft); }
+
+.tools{ flex:none; display:flex; align-items:center; gap:4px; padding:6px 8px; border-bottom:1px solid var(--line-soft); }
+.grow{ flex:1; }
+.tb{ min-width:30px; height:28px; padding:0 8px; border-radius:7px; border:1px solid var(--line); background:var(--surface-2); color:var(--ink); font-size:15px; line-height:1; }
+.tb:hover{ border-color:var(--accent); color:var(--accent); }
+.tb[disabled]{ opacity:.4; pointer-events:none; }
+.tb.pct{ font-size:12px; min-width:56px; }
+.tb.pct.on{ border-color:var(--accent); color:var(--accent); }
+.pgn{ font-size:12px; color:var(--ink-dim); min-width:48px; text-align:center; }
+
+/* sem align-items:center: página mais larga que a janela tem que poder rolar para os dois lados (margin:auto vira 0) */
+.scroller{ flex:1; min-height:0; overflow:auto; overscroll-behavior:contain; background:var(--bg); padding:12px; display:flex; flex-direction:column; align-items:flex-start; gap:12px; touch-action:pan-x pan-y; outline:none; }
+.scroller[hidden]{ display:none; }
+.pg{ flex:none; margin-inline:auto; background:#fff; box-shadow:0 1px 3px rgba(0,0,0,.35); }
+.pg canvas{ display:block; width:100%; height:100%; }
+.state{ margin:auto; padding:24px; font-size:13px; color:var(--ink-dim); text-align:center; }
+.state a{ color:var(--accent); }
+
+.rs{ position:absolute; z-index:2; touch-action:none; }
+.rs.corner{ right:0; bottom:0; width:18px; height:18px; cursor:nwse-resize; background:linear-gradient(135deg, transparent 50%, var(--ink-faint) 50%, var(--ink-faint) 58%, transparent 58%, transparent 70%, var(--ink-faint) 70%, var(--ink-faint) 78%, transparent 78%); }
+.rs.edge{ top:0; bottom:0; width:8px; cursor:ew-resize; }
+.win[data-mode="right"] .rs.edge{ left:-3px; }
+.win[data-mode="left"] .rs.edge{ right:-3px; }
+.rs.edge:hover{ background:var(--accent-soft); }
+
+/* prévia do encaixe enquanto arrasta perto da borda */
+.snap{ position:fixed; z-index:54; top:8px; bottom:8px; width:min(440px, 40vw); border:2px dashed var(--accent); border-radius:12px; background:var(--accent-soft); pointer-events:none; }
+.snap[data-side="left"]{ left:8px; }
+.snap[data-side="right"]{ right:8px; }
+
+@media (prefers-reduced-motion:no-preference){ .win{ transition:box-shadow .15s; } }

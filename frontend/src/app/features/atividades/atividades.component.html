@@ -1,0 +1,48 @@
+<div class="page">
+  <header class="topbar">
+    <a class="iconbtn" routerLink="/" title="Voltar ao portal" aria-label="Voltar ao portal">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"></rect><rect x="14" y="3" width="7" height="7" rx="1"></rect><rect x="3" y="14" width="7" height="7" rx="1"></rect><rect x="14" y="14" width="7" height="7" rx="1"></rect></svg>
+    </a>
+    <div class="brand mono">atividades</div>
+    <div class="spacer"></div>
+    <a class="tbtn" routerLink="/derivacoes"><span class="lbl">Derivações</span><span class="sm" aria-hidden="true">⇒</span></a>
+    <a class="tbtn" routerLink="/bancada"><span class="lbl">Bancada</span><span class="sm" aria-hidden="true">◎</span></a>
+    <button class="iconbtn" (click)="theme.toggle()" title="Alternar tema" aria-label="Alternar tema">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8z"></path></svg>
+    </button>
+  </header>
+
+  <main class="wrap">
+    <div class="eyebrow mono">Listas para baixar ou consultar ao lado</div>
+    <h1>Atividades</h1>
+    <p class="sub">Abra a lista numa janela que acompanha você pelo app: encaixe à esquerda ou à direita, ou deixe flutuando e arraste para onde quiser. Dá para rolar, dar zoom (botões, Ctrl + roda do mouse ou pinça no celular) e baixar o PDF.</p>
+
+    <div class="grid">
+      @for (a of items; track a.id) {
+        <article class="card" [class.open]="isOpen(a)">
+          <div class="thumb" aria-hidden="true">
+            <svg viewBox="0 0 60 78" width="60" height="78"><path d="M4 2h38l14 14v58a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z" fill="var(--bg)" stroke="var(--line)" stroke-width="1.5"/><path d="M42 2v14h14" fill="none" stroke="var(--line)" stroke-width="1.5"/><g stroke="var(--ink-faint)" stroke-width="2" stroke-linecap="round"><path d="M10 26h30M10 33h38M10 40h24M10 50h34M10 57h20"/></g><rect x="8" y="64" width="22" height="9" rx="2" fill="var(--trap)"/><text x="19" y="71" font-size="6.5" text-anchor="middle" fill="#fff" font-family="IBM Plex Mono, monospace" font-weight="700">PDF</text></svg>
+          </div>
+          <div class="body">
+            <div class="subj mono">{{ a.subject }}</div>
+            <h2>{{ a.title }}</h2>
+            <p class="desc">{{ a.description }}</p>
+            <div class="topics">@for (t of a.topics; track t) { <span class="topic">{{ t }}</span> }</div>
+            <div class="meta mono">{{ a.pages }} páginas · {{ a.size }} · PDF</div>
+            <div class="acts">
+              <button class="tbtn primary" (click)="open(a, pdf.narrow() ? 'float' : 'right')">{{ isOpen(a) ? 'Aberta' : 'Abrir ao lado' }}</button>
+              <button class="tbtn" (click)="open(a, 'float')">Flutuante</button>
+              <a class="tbtn" [href]="a.url" [attr.download]="a.fileName">Baixar</a>
+            </div>
+            @if (a.solutions.length) {
+              <div class="sol">
+                <span class="mono">Resolução comentada:</span>
+                @for (s of a.solutions; track s.section) { <a [routerLink]="['/teoria', s.section]">{{ s.label }}</a> }
+              </div>
+            }
+          </div>
+        </article>
+      }
+    </div>
+  </main>
+</div>

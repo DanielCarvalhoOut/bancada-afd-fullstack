@@ -643,6 +643,7 @@ export class BancadaComponent implements OnInit {
   // ---------- navegação ----------
   toPortal(): void { this.router.navigate(['/']); }
   toTeoria(): void { this.router.navigate(['/teoria']); }
+  toPage(path: '/derivacoes' | '/atividades'): void { this.router.navigate([path]); }
 
   private seedIfEmpty(): void {
     if (this.model.states.length) return;

@@ -26,6 +26,10 @@ kbd{ font-family:"IBM Plex Mono",monospace; font-size:10.5px; padding:1px 5px; b
 .part:hover{ background:var(--surface-2); color:var(--ink); }
 .part.on{ background:var(--accent-soft); color:var(--ink); }
 .part.on small{ color:var(--accent); }
+.extras{ display:grid; gap:2px; margin:-6px 0 14px; padding-bottom:10px; border-bottom:1px solid var(--line-soft); }
+.extras a{ padding:6px 8px; border-radius:7px; font-size:12.5px; color:var(--ink-dim); }
+
+.extras a:hover{ background:var(--surface-2); color:var(--ink); }
 .toc ol{ list-style:none; margin:0; padding:0; }
 .toc .n{ flex:none; min-width:26px; font-size:11px; color:var(--ink-faint); padding-top:2px; font-variant-numeric:tabular-nums; }
 .ch, .secs a, .res a{ display:flex; gap:8px; padding:7px 8px; border-radius:7px; line-height:1.35; }

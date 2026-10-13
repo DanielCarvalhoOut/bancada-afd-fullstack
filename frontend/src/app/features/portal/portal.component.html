@@ -14,10 +14,32 @@
     </button>
   </div>
 
-  <div class="portal-lead">
-    <div class="eyebrow">Ambiente de estudo · Linguagens Formais</div>
-    <h1>Monte, simule e <em>determinize</em> autômatos finitos.</h1>
-    <p class="sub">Dois espaços de trabalho, com alfabeto Σ configurável (padrão &#123;0, 1&#125;): um para autômatos determinísticos, outro para não determinísticos com fecho-ε e conversão para AFD.</p>
+  <div class="hero">
+    <div class="portal-lead">
+      <div class="eyebrow">Ambiente de estudo · Linguagens Formais</div>
+      <h1>Monte, simule e <em>determinize</em> autômatos finitos.</h1>
+      <p class="sub">Dois espaços de trabalho, com alfabeto Σ configurável (padrão &#123;0, 1&#125;): um para autômatos determinísticos, outro para não determinísticos com fecho-ε e conversão para AFD.</p>
+    </div>
+
+    <aside class="deriv" aria-labelledby="deriv-t">
+      <svg class="deriv-tree" viewBox="0 0 220 132" width="220" height="132" aria-hidden="true">
+        <g class="e"><path d="M110 18 L46 58"/><path d="M110 18 L110 58"/><path d="M110 18 L174 58"/><path d="M110 58 L74 100"/><path d="M110 58 L110 100"/><path d="M110 58 L146 100"/></g>
+        <g class="nt"><rect x="96" y="6" width="28" height="24" rx="12"/><rect x="32" y="46" width="28" height="24" rx="12"/><rect x="96" y="46" width="28" height="24" rx="12"/><rect x="160" y="46" width="28" height="24" rx="12"/><rect x="96" y="88" width="28" height="24" rx="12" class="open"/></g>
+        <g class="lbl"><text x="110" y="22">R</text><text x="46" y="62">X</text><text x="110" y="62">S</text><text x="174" y="62">X</text><text x="74" y="104" class="t">a</text><text x="110" y="104">T</text><text x="146" y="104" class="t">b</text></g>
+      </svg>
+      <div class="deriv-k mono">Novo · derivações e árvores</div>
+      <h2 id="deriv-t">Confira cada ⇒ e cada ramo</h2>
+      <p>Escreva a derivação passo a passo ou monte a árvore clicando nos nós: a bancada diz qual regra foi usada, onde o passo quebrou e se a fronteira chega na palavra.</p>
+      <ul class="deriv-l mono">
+        <li><b>⇒</b> um passo · <b>⇒*</b> vários</li>
+        <li>mais à esquerda / à direita</li>
+        <li>árvore ↔ derivação</li>
+      </ul>
+      <div class="deriv-acts">
+        <a class="tbtn primary" routerLink="/derivacoes">Verificar derivações</a>
+        <a class="tbtn" routerLink="/atividades">Atividades em PDF</a>
+      </div>
+    </aside>
   </div>
 
   <div class="diptych">

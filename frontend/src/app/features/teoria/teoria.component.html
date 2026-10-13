@@ -49,6 +49,11 @@
         }
       </div>
 
+      <div class="extras">
+        <a routerLink="/derivacoes"><span aria-hidden="true">⇒</span> Verificar derivações e árvores</a>
+        <a routerLink="/atividades"><span aria-hidden="true">▤</span> Atividades em PDF</a>
+      </div>
+
       @if (results(); as res) {
         <div class="res-head mono">{{ res.length ? res.length + (res.length === 1 ? ' seção' : ' seções') : 'Nada encontrado' }}</div>
         <ol class="res">

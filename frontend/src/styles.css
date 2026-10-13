@@ -93,3 +93,6 @@ h1,h2,h3{ text-wrap:balance; }
 .setseq{ display:flex; flex-wrap:wrap; gap:6px 4px; align-items:center; font-family:"IBM Plex Mono",monospace; font-size:12.5px; margin-top:6px; }
 .setseq .st{ background:var(--surface-2); border:1px solid var(--line); border-radius:6px; padding:3px 8px; }
 .setseq .op{ color:var(--ink-dim); }
+
+/* janela de PDF encaixada: o conteúdo em fluxo normal cede a faixa dela */
+.app-shell{ padding-left:var(--dock-l, 0px); padding-right:var(--dock-r, 0px); }

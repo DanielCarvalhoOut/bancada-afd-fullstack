@@ -1,0 +1,227 @@
+<div class="page">
+  <header class="topbar">
+    <a class="iconbtn" routerLink="/" title="Voltar ao portal" aria-label="Voltar ao portal">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"></rect><rect x="14" y="3" width="7" height="7" rx="1"></rect><rect x="3" y="14" width="7" height="7" rx="1"></rect><rect x="14" y="14" width="7" height="7" rx="1"></rect></svg>
+    </a>
+    <div class="brand mono">derivações</div>
+    <div class="where mono">⇒ passo a passo · árvore de derivação</div>
+    <div class="spacer"></div>
+    <a class="tbtn" routerLink="/atividades" title="Listas em PDF">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"></path><path d="M14 3v5h5"></path><path d="M9 13h6M9 17h4"></path></svg>
+      <span class="lbl">Atividades</span>
+    </a>
+    <a class="tbtn" routerLink="/teoria/gram-arvore" title="Teoria: árvore e ambiguidade">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 4h6a4 4 0 0 1 4 4v13a3 3 0 0 0-3-3H2z"></path><path d="M22 4h-6a4 4 0 0 0-4 4v13a3 3 0 0 1 3-3h7z"></path></svg>
+      <span class="lbl">Teoria</span>
+    </a>
+    <button class="iconbtn" (click)="theme.toggle()" title="Alternar tema" aria-label="Alternar tema">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8z"></path></svg>
+    </button>
+  </header>
+
+  <div class="work">
+    <!-- ───────── GRAMÁTICA ───────── -->
+    <aside class="panel gram">
+      <div class="ph"><span class="k mono">1</span><h2>Gramática</h2></div>
+
+      <label class="lab mono" for="dv-preset">Exemplo</label>
+      <select id="dv-preset" class="inp" [value]="presetId()" (change)="loadPreset($any($event.target).value)">
+        @for (p of presets; track p.id) { <option [value]="p.id">{{ p.label }}</option> }
+        <option value="">Personalizada</option>
+      </select>
+      @if (preset(); as p) { <p class="hint">{{ p.note }}</p> }
+
+      <label class="lab mono" for="dv-gram">Regras (uma por linha)</label>
+      <textarea id="dv-gram" class="inp code" rows="6" spellcheck="false" maxlength="4000" autocomplete="off"
+                [value]="grammarText()" (input)="editGrammar($any($event.target).value)"></textarea>
+      <p class="hint">Use <code>→</code> ou <code>-&gt;</code>, <code>|</code> entre alternativas e <code>ε</code> (ou <code>eps</code>) para vazio. A partida é o lado esquerdo da 1ª regra. Com espaços entre símbolos, <code>id</code> vira um terminal só.</p>
+
+      @for (pr of parsed().problems; track $index) {
+        <div class="msg err">@if (pr.line) { <b class="mono">linha {{ pr.line }}</b> } {{ pr.message }}</div>
+      }
+
+      @if (g(); as G) {
+        <dl class="tuple">
+          <dt class="mono">N</dt><dd class="mono">{{ '{' }}{{ G.nonterminals.join(', ') }}{{ '}' }}</dd>
+          <dt class="mono">T</dt><dd class="mono">{{ '{' }}{{ G.terminals.join(', ') }}{{ '}' }}</dd>
+          <dt class="mono">S</dt><dd class="mono">{{ G.start }}</dd>
+        </dl>
+        @if (kind(); as k) {
+          <div class="chip" [class.ok]="k.regular">{{ k.regular ? 'Regular (tipo 3)' : 'Livre de contexto (tipo 2)' }}</div>
+          <p class="hint">{{ k.reason }}</p>
+        }
+        <ul class="rules mono">
+          @for (r of prodsByLhs(); track r.lhs) {
+            <li><b>{{ r.lhs }}</b> → {{ r.alts.join(' | ') }}</li>
+          }
+        </ul>
+      }
+    </aside>
+
+    <main class="main">
+      <!-- ───────── PALAVRA ───────── -->
+      <section class="panel wordp">
+        <div class="ph"><span class="k mono">2</span><h2>Palavra-alvo</h2></div>
+        <div class="wrow">
+          <input class="inp code" type="text" maxlength="200" spellcheck="false" autocomplete="off" placeholder="ex.: aaaba"
+                 [value]="word()" (input)="word.set($any($event.target).value); answer.set(null)" aria-label="Palavra-alvo" />
+          <button class="tbtn" (click)="solve()" [disabled]="!wordTok().tokens" title="Procura uma derivação mais à esquerda (gabarito)">Gerar gabarito</button>
+        </div>
+        @if (wordTok().error; as e) { <div class="msg err">{{ e }}</div> }
+        @if (wordTok().tokens; as w) { <p class="hint mono">{{ w.length }} símbolo(s): {{ w.join(' · ') || EPS }}</p> }
+        @if (answer(); as a) {
+          @if (a.result.found) {
+            <div class="msg ok">
+              <div><b>É gerada.</b> Uma derivação mais à esquerda ({{ a.text.split('\n').length - 1 }} passos):</div>
+              <pre class="code mono">{{ a.text.split('\n').join('  ⇒  ') }}</pre>
+              <button class="mini" (click)="useAnswer()">Copiar para a derivação</button>
+            </div>
+          } @else if (a.result.exhaustive) {
+            <div class="msg err"><b>Não é gerada.</b> A busca percorreu todas as derivações possíveis do tamanho da palavra e nenhuma chega nela.</div>
+          } @else {
+            <div class="msg warn"><b>Inconclusivo.</b> A busca atingiu o limite sem encontrar derivação. Tente um invariante (tamanho, simetria, contagem).</div>
+          }
+        }
+      </section>
+
+      <div class="pair">
+        <!-- ───────── DERIVAÇÃO ───────── -->
+        <section class="panel">
+          <div class="ph">
+            <span class="k mono">3</span><h2>Derivação</h2>
+            <div class="spacer"></div>
+            <button class="mini" (click)="undoStep()" title="Remove a última linha">Desfazer</button>
+            <button class="mini" (click)="restartSteps()">Recomeçar</button>
+          </div>
+          <label class="lab mono" for="dv-steps">Uma forma sentencial por linha (ou separadas por ⇒)</label>
+          <textarea id="dv-steps" class="inp code" rows="7" spellcheck="false" maxlength="6000" autocomplete="off"
+                    [value]="stepsText()" (input)="editSteps($any($event.target).value)"></textarea>
+
+          @if (lastForm(); as f) {
+            <div class="next">
+              <span class="lab mono">Próximo passo: clique num não terminal</span>
+              <div class="tokens">
+                @for (s of f; track $index; let i = $index) {
+                  @if (isNTsym(s)) {
+                    <button class="tok nt" [class.on]="pickPos() === i" (click)="pick(i)" [attr.aria-pressed]="pickPos() === i">{{ s }}</button>
+                  } @else { <span class="tok t">{{ s }}</span> }
+                } @empty { <span class="tok eps">ε</span> }
+              </div>
+              @if (pickOptions().length) {
+                <div class="opts">
+                  @for (p of pickOptions(); track p.index) { <button class="opt mono" (click)="applyStep(p)">{{ prodText(p) }}</button> }
+                </div>
+              }
+            </div>
+          }
+
+          @if (derivation(); as d) {
+            <ol class="report">
+              @for (s of d.steps; track $index; let i = $index) {
+                <li [attr.data-st]="s.status">
+                  <span class="ic" aria-hidden="true">{{ s.status === 'error' ? '✗' : '✓' }}</span>
+                  <span class="mono form">{{ i === 0 ? '' : '⇒ ' }}{{ s.text }}</span>
+                  <span class="why">
+                    {{ s.message }}
+                    @if (s.status === 'ok') {
+                      @if (s.leftmost) { <em class="tag">+ à esquerda</em> }
+                      @if (s.ambiguous) { <em class="tag">mais de uma explicação</em> }
+                    }
+                  </span>
+                </li>
+              }
+            </ol>
+            <div class="checks">
+              <span class="chip" [class.ok]="d.startsAtStart" [class.bad]="!d.startsAtStart">começa na partida</span>
+              <span class="chip" [class.ok]="d.allValid" [class.bad]="!d.allValid">todos os passos válidos</span>
+              <span class="chip" [class.ok]="d.endsInSentence">termina em sentença</span>
+              @if (d.matchesWord !== null) {
+                <span class="chip" [class.ok]="d.matchesWord" [class.bad]="d.endsInSentence && !d.matchesWord">= palavra-alvo</span>
+              }
+              <span class="chip" [class.ok]="d.leftmost">mais à esquerda</span>
+              <span class="chip" [class.ok]="d.rightmost">mais à direita</span>
+            </div>
+            @if (d.allValid && d.endsInSentence && d.matchesWord !== false) {
+              <div class="msg ok"><b>Derivação correta</b> em {{ d.count }} passo(s). Logo {{ g()?.start }} ⇒* {{ show(lastForm()) }}.</div>
+            }
+            <div class="row-acts">
+              <button class="tbtn" (click)="treeFromDerivation()" [disabled]="!d.allValid || !d.startsAtStart">Montar a árvore desta derivação →</button>
+            </div>
+          }
+        </section>
+
+        <!-- ───────── ÁRVORE ───────── -->
+        <section class="panel">
+          <div class="ph">
+            <span class="k mono">4</span><h2>Árvore de derivação</h2>
+            <div class="spacer"></div>
+            <button class="mini" (click)="restartTree()">Recomeçar</button>
+          </div>
+          <label class="lab mono" for="dv-tree">Notação: nó[filhos]. Ex.: R[S[a T[ε] b]]</label>
+          <textarea id="dv-tree" class="inp code" rows="3" spellcheck="false" maxlength="4000" autocomplete="off"
+                    [value]="treeText()" (input)="editTree($any($event.target).value)"></textarea>
+          @if (treeParse().error; as e) { <div class="msg err">{{ e }}</div> }
+
+          @if (treeView(); as tv) {
+            <div class="canvas" role="group" aria-label="Árvore de derivação; clique num nó para expandir ou corrigir">
+              <svg [attr.viewBox]="'0 0 ' + tv.w + ' ' + tv.h" [attr.width]="tv.w" [attr.height]="tv.h">
+                @for (e of tv.edges; track e.key) {
+                  <line [attr.x1]="e.x1" [attr.y1]="e.y1" [attr.x2]="e.x2" [attr.y2]="e.y2" class="edge" [class.err]="e.err"></line>
+                }
+                @for (n of tv.nodes; track n.path) {
+                  <g class="tn" [attr.data-k]="n.kind" [class.err]="n.err" [class.open]="n.open" [class.sel]="selPath() === n.path"
+                     (click)="select(n.path)" (keydown.enter)="select(n.path)" (keydown.space)="select(n.path); $event.preventDefault()"
+                     tabindex="0" role="button" [attr.aria-label]="n.sym + (n.err ? ', com erro' : n.open ? ', não expandido' : '')">
+                    <rect [attr.x]="n.x - symWidth(n.sym) / 2" [attr.y]="n.y - 14" [attr.width]="symWidth(n.sym)" height="28" rx="14"></rect>
+                    <text [attr.x]="n.x" [attr.y]="n.y + 4.5" text-anchor="middle">{{ n.sym }}</text>
+                  </g>
+                }
+              </svg>
+            </div>
+            <p class="hint">Clique num não terminal para escolher a regra que o expande. Laranja tracejado = ainda não expandido; vermelho = regra que não existe.</p>
+          }
+
+          @if (selNode(); as n) {
+            <div class="selbox">
+              <div class="mono"><b>{{ n.sym }}</b> selecionado</div>
+              @if (selIssue(); as m) { <div class="msg err">{{ m }}</div> }
+              @if (selOptions().length) {
+                <div class="opts">
+                  @for (p of selOptions(); track p.index) { <button class="opt mono" (click)="expandSel(p)">{{ prodText(p) }}</button> }
+                  @if (n.children) { <button class="opt" (click)="collapseSel()">Recolher (apagar filhos)</button> }
+                </div>
+              } @else if (n.children) {
+                <div class="opts"><button class="opt" (click)="collapseSel()">Recolher (apagar filhos)</button></div>
+              } @else {
+                <p class="hint">Terminal: é folha, não se expande.</p>
+              }
+            </div>
+          }
+
+          @if (treeReport(); as tr) {
+            <div class="frontier">
+              <span class="lab mono">Fronteira (folhas da esquerda para a direita)</span>
+              <span class="mono fv">{{ show(tr.frontier) }}</span>
+            </div>
+            <div class="checks">
+              <span class="chip" [class.ok]="tr.valid" [class.bad]="!tr.valid">regras válidas</span>
+              <span class="chip" [class.ok]="tr.complete">completa (sem não terminais nas folhas)</span>
+              @if (tr.matchesWord !== null) {
+                <span class="chip" [class.ok]="tr.matchesWord" [class.bad]="tr.complete && !tr.matchesWord">fronteira = palavra-alvo</span>
+              }
+            </div>
+            @for (i of tr.issues; track i.id) { <div class="msg err">{{ i.message }}</div> }
+            @if (tr.valid && tr.complete && tr.matchesWord !== false) {
+              <div class="msg ok"><b>Árvore correta.</b> A fronteira é uma sentença gerada por {{ g()?.start }}.</div>
+            } @else if (tr.valid && !tr.complete) {
+              <div class="msg warn">Por enquanto a fronteira é uma <b>forma sentencial</b>: faltam {{ tr.incomplete.length }} não terminal(is) para expandir.</div>
+            }
+            <div class="row-acts">
+              <button class="tbtn" (click)="derivationFromTree()" [disabled]="!tr.valid">← Derivação mais à esquerda desta árvore</button>
+            </div>
+          }
+        </section>
+      </div>
+    </main>
+  </div>
+</div>
