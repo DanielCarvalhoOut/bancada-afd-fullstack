@@ -627,3 +627,85 @@ export function searchLeftmost(g: Grammar, word: string[]): SearchResult {
   }
   return { found: false, exhaustive: !truncated };
 }
+
+/** Derivação mais à direita lida da árvore. */
+export function treeToRightmost(g: Grammar, root: TreeNode): string[][] {
+  let frontier: TreeNode[] = [root];
+  const forms: string[][] = [[root.sym]];
+  for (let guard = 0; guard < LIMITS.treeNodes; guard++) {
+    let i = -1;
+    for (let k = frontier.length - 1; k >= 0; k--) if (isNT(g, frontier[k].sym) && frontier[k].children) { i = k; break; }
+    if (i < 0) break;
+    const kids = frontier[i].children!.filter((c) => c.sym !== EPS);
+    frontier = [...frontier.slice(0, i), ...kids, ...frontier.slice(i + 1)];
+    forms.push(frontier.map((n) => n.sym));
+  }
+  return forms;
+}
+
+// ───────────────────────── comparação de linguagens ─────────────────────────
+
+/**
+ * Todas as sentenças de L(G) com até maxLen terminais (BFS de derivações mais à
+ * esquerda, deduplicadas). `complete = false` quando o teto de nós foi atingido.
+ */
+export function enumerateLanguage(g: Grammar, maxLen: number, nodeCap = 250_000): { words: Set<string>; complete: boolean } {
+  const words = new Set<string>();
+  const seen = new Set<string>();
+  let queue: string[][] = [[g.start]];
+  seen.add(g.start);
+  let visited = 0;
+  let complete = true;
+  const cap = maxLen * 2 + 6;
+  while (queue.length) {
+    const next: string[][] = [];
+    for (const f of queue) {
+      const pos = firstNT(g, f);
+      if (pos < 0) { words.add(f.join('')); continue; }
+      for (const prod of g.byLhs.get(f[pos])!) {
+        const n = apply(f, { pos, prod });
+        let need = 0;
+        for (const s of n) if (!isNT(g, s) || !g.nullable.has(s)) need++;
+        if (need > maxLen) continue;
+        if (n.length > cap) { complete = false; continue; }
+        const k = key(n);
+        if (seen.has(k)) continue;
+        seen.add(k);
+        if (++visited > nodeCap) return { words, complete: false };
+        next.push(n);
+      }
+    }
+    queue = next;
+  }
+  return { words, complete };
+}
+
+export interface LanguageDiff {
+  extra: string[];     // gerada pela gramática do aluno, mas fora da linguagem pedida
+  missing: string[];   // da linguagem pedida, mas a gramática não gera
+  tested: number;      // palavras de Σ* examinadas
+  complete: boolean;
+  badSymbols: string[];
+}
+
+/** Compara L(G) com a linguagem de referência em todas as palavras de tamanho ≤ maxLen. */
+export function compareLanguage(g: Grammar, alphabet: string[], inLang: (w: string) => boolean, maxLen: number): LanguageDiff {
+  const badSymbols = g.terminals.filter((t) => !alphabet.includes(t));
+  if (badSymbols.length) return { extra: [], missing: [], tested: 0, complete: true, badSymbols };
+  const { words, complete } = enumerateLanguage(g, maxLen);
+  const extra: string[] = [];
+  const missing: string[] = [];
+  let tested = 0;
+  let layer = [''];
+  for (let len = 0; len <= maxLen; len++) {
+    for (const w of layer) {
+      tested++;
+      const want = inLang(w);
+      const has = words.has(w);
+      if (has && !want && extra.length < 6) extra.push(w);
+      if (!has && want && missing.length < 6) missing.push(w);
+    }
+    if (len < maxLen) layer = layer.flatMap((w) => alphabet.map((a) => w + a));
+  }
+  return { extra, missing, tested, complete, badSymbols };
+}

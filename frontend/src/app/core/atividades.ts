@@ -27,4 +27,18 @@ export const ATIVIDADES: Atividade[] = [
       { label: 'Regulares Q1', section: 'ex-gr-q1' },
     ],
   },
+  {
+    id: 'lista-glc',
+    title: 'Lista de Atividades — Gramáticas Livres de Contexto',
+    fileName: 'Lista-GLC-LFA.pdf',
+    url: '/atividades/lista-glc-lfa.pdf',
+    subject: 'Gramáticas Livres de Contexto',
+    description: 'Derivações mais à esquerda e à direita, árvores de derivação, tipo 2 × tipo 3, ambiguidade, GLC ε-livre e construção de gramáticas para linguagens dadas.',
+    pages: 2,
+    size: '88 KB',
+    topics: ['mais à esquerda / direita', 'árvore', 'ambiguidade', 'ε-livre', 'construir G'],
+    solutions: [
+      { label: 'Exercícios interativos Q1–Q12', section: 'ex-glc-q1' },
+    ],
+  },
 ];

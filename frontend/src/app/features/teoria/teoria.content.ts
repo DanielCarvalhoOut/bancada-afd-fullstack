@@ -1,4 +1,5 @@
 import { AutomatonKind, AutomatonModel } from '../../domain/automaton';
+import { Exercise } from '../../domain/exercise';
 
 /**
  * Conteúdo do "livro" de teoria. É dado estático (não vem de backend): cada
@@ -16,7 +17,9 @@ export type Block =
   | { t: 'table'; head: string[]; rows: string[][] }
   | { t: 'code'; text: string }
   | { t: 'note'; kind: NoteKind; title?: string; html: string }
-  | { t: 'fig'; model: AutomatonModel; caption: string; re?: string };
+  | { t: 'fig'; model: AutomatonModel; caption: string; re?: string }
+  /** Exercício corrigível (responder, corrigir, ver resposta). */
+  | { t: 'ex'; ex: Exercise };
 
 export interface Section { id: string; title: string; blocks: Block[] }
 export interface Chapter { id: string; title: string; summary: string; sections: Section[] }

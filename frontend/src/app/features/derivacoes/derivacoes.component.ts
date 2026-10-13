@@ -1,32 +1,16 @@
 import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { TreeEditorComponent } from '../../shared/tree-editor.component';
 import { ThemeService } from '../../core/services/theme.service';
 import { PdfWindowService } from '../../core/services/pdf-window.service';
 import {
-  EPS, Grammar, Production, SearchResult, TreeNode, TreeReport,
-  checkDerivation, checkTree, classify, derivationToTree, expandLeaf, isNT, parseGrammar,
-  parseTree, replaceNode, searchLeftmost, serializeTree, showForm, showProd, tokenizeForm, treeToLeftmost,
+  EPS, Grammar, Production, SearchResult, TreeReport,
+  checkDerivation, checkTree, classify, derivationToTree, isNT, parseGrammar,
+  parseTree, searchLeftmost, serializeTree, showForm, showProd, tokenizeForm, treeToLeftmost,
 } from '../../domain/grammar';
 import { PRESETS } from './presets';
 
 const STORE_KEY = 'bancada-derivacoes-v1';
-const NODE_W = 46;   // largura por folha
-const LEVEL_H = 64;  // distância entre níveis
-const PAD = 26;
-
-interface LNode {
-  path: string;      // "0.2.1": estável entre edições do texto (o id do parser não é)
-  sym: string;
-  x: number;
-  y: number;
-  kind: 'nt' | 't' | 'eps';
-  leaf: boolean;
-  err: string | null;
-  open: boolean;     // não terminal ainda sem filhos
-}
-interface LEdge { key: string; x1: number; y1: number; x2: number; y2: number; err: boolean }
-interface TreeView { nodes: LNode[]; edges: LEdge[]; w: number; h: number }
-
 interface Saved { preset: string; grammar: string; word: string; steps: string; tree: string }
 
 function load(): Saved | null {
@@ -40,14 +24,6 @@ function load(): Saved | null {
   } catch { return null; }
 }
 
-function nodeAt(root: TreeNode, path: string): TreeNode | null {
-  let n: TreeNode | null = root;
-  for (const k of path.split('.').slice(1)) {
-    n = n?.children?.[+k] ?? null;
-  }
-  return n;
-}
-
 /**
  * Página de derivações: o aluno escreve a gramática, a derivação (uma forma por
  * linha) e a árvore (notação com colchetes ou clicando nos nós). Tudo é
@@ -56,7 +32,7 @@ function nodeAt(root: TreeNode, path: string): TreeNode | null {
 @Component({
   selector: 'app-derivacoes',
   standalone: true,
-  imports: [RouterLink],
+  imports: [RouterLink, TreeEditorComponent],
   templateUrl: './derivacoes.component.html',
   styleUrl: './derivacoes.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -126,21 +102,6 @@ export class DerivacoesComponent {
     const g = this.g(), r = this.treeParse().root;
     return g && r ? checkTree(g, r, this.wordTok().tokens) : null;
   });
-  readonly treeView = computed<TreeView | null>(() => this.layout());
-  readonly selPath = signal<string | null>(null);
-  readonly selNode = computed(() => {
-    const r = this.treeParse().root, p = this.selPath();
-    return r && p ? nodeAt(r, p) : null;
-  });
-  readonly selOptions = computed<Production[]>(() => {
-    const g = this.g(), n = this.selNode();
-    return g && n && isNT(g, n.sym) ? g.byLhs.get(n.sym) ?? [] : [];
-  });
-  readonly selIssue = computed(() => {
-    const n = this.selNode(), rep = this.treeReport();
-    return n && rep ? rep.issueById.get(n.id) ?? null : null;
-  });
-
   constructor() {
     effect(() => {
       const data: Saved = { preset: this.presetId(), grammar: this.grammarText(), word: this.word(), steps: this.stepsText(), tree: this.treeText() };
@@ -167,7 +128,6 @@ export class DerivacoesComponent {
   }
   private resetUi(): void {
     this.pickPos.set(null);
-    this.selPath.set(null);
     this.answer.set(null);
   }
 
@@ -209,28 +169,16 @@ export class DerivacoesComponent {
   }
 
   // ─── ações: árvore ───
-  editTree(v: string): void { this.treeText.set(v); this.selPath.set(null); }
-  select(path: string): void { this.selPath.set(this.selPath() === path ? null : path); }
-  expandSel(prod: Production): void {
-    const r = this.treeParse().root, n = this.selNode();
-    if (!r || !n) return;
-    this.treeText.set(serializeTree(replaceNode(r, n.id, (old) => expandLeaf(old, prod))));
-  }
-  collapseSel(): void {
-    const r = this.treeParse().root, n = this.selNode();
-    if (!r || !n) return;
-    this.treeText.set(serializeTree(replaceNode(r, n.id, (old) => ({ ...old, children: null }))));
-  }
+  editTree(v: string): void { this.treeText.set(v); }
   restartTree(): void {
     const g = this.g();
     if (g) this.treeText.set(g.start);
-    this.selPath.set(null);
   }
   treeFromDerivation(): void {
     const g = this.g(), d = this.derivation();
     if (!g || !d) return;
     const t = derivationToTree(g, d);
-    if (t) { this.treeText.set(serializeTree(t)); this.selPath.set(null); }
+    if (t) this.treeText.set(serializeTree(t));
   }
   derivationFromTree(): void {
     const g = this.g(), r = this.treeParse().root;
@@ -243,38 +191,4 @@ export class DerivacoesComponent {
   prodText(p: Production): string { return showProd(this.g(), p); }
   isNTsym(s: string): boolean { const g = this.g(); return !!g && isNT(g, s); }
 
-  /**
-   * Desenho "arrumado": folhas em colunas consecutivas, pai centrado sobre o
-   * primeiro e o último filho. O(n) e determinístico — não precisa de lib.
-   */
-  private layout(): TreeView | null {
-    const g = this.g(), root = this.treeParse().root, rep = this.treeReport();
-    if (!g || !root) return null;
-    const nodes: LNode[] = [];
-    const edges: LEdge[] = [];
-    let cursor = 0; // x acumulado das folhas (largura depende do símbolo: "EXPR" ocupa mais que "a")
-    let depthMax = 0;
-    const place = (n: TreeNode, path: string, depth: number): { x: number; y: number } => {
-      depthMax = Math.max(depthMax, depth);
-      const y = PAD + depth * LEVEL_H;
-      let x: number;
-      const kids = n.children ?? [];
-      const pts = kids.map((c, i) => place(c, `${path}.${i}`, depth + 1));
-      if (!pts.length) {
-        const w = Math.max(NODE_W, this.symWidth(n.sym) + 10);
-        x = PAD + cursor + w / 2;
-        cursor += w;
-      }
-      else x = (pts[0].x + pts[pts.length - 1].x) / 2;
-      const err = rep?.issueById.get(n.id) ?? null;
-      pts.forEach((p, i) => edges.push({ key: `${path}>${i}`, x1: x, y1: y + 14, x2: p.x, y2: p.y - 14, err: !!err }));
-      const kind = n.sym === EPS ? 'eps' : isNT(g, n.sym) ? 'nt' : 't';
-      nodes.push({ path, sym: n.sym, x, y, kind, leaf: !n.children, err, open: kind === 'nt' && !n.children });
-      return { x, y };
-    };
-    place(root, '0', 0);
-    return { nodes, edges, w: PAD * 2 + Math.max(cursor, NODE_W), h: PAD * 2 + depthMax * LEVEL_H };
-  }
-
-  symWidth(s: string): number { return Math.max(28, [...s].length * 8.6 + 16); }
 }

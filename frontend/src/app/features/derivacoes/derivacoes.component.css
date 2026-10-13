@@ -72,22 +72,6 @@ button[disabled]{ opacity:.45; pointer-events:none; }
 .tag{ font-style:normal; font-size:10.5px; padding:0 6px; margin-left:4px; border-radius:99px; border:1px solid var(--line); color:var(--ink-faint); white-space:nowrap; }
 .row-acts{ margin-top:12px; display:flex; flex-wrap:wrap; gap:8px; }
 
-.canvas{ margin-top:10px; overflow:auto; max-height:520px; border:1px solid var(--line-soft); border-radius:10px; background-color:var(--bg); background-image:radial-gradient(var(--grid) 1.2px, transparent 1.2px); background-size:18px 18px; }
-.canvas svg{ display:block; margin:0 auto; }
-.edge{ stroke:var(--ink-faint); stroke-width:1.4; }
-.edge.err{ stroke:var(--trap); }
-.tn{ cursor:pointer; outline:none; }
-.tn rect{ fill:var(--surface); stroke:var(--line); stroke-width:1.3; }
-.tn text{ font-family:"IBM Plex Mono",monospace; font-size:13.5px; fill:var(--ink); pointer-events:none; }
-.tn[data-k="nt"] rect{ stroke:var(--accent); fill:var(--accent-soft); }
-.tn[data-k="nt"] text{ font-weight:600; }
-.tn[data-k="eps"] text{ fill:var(--ink-faint); font-style:italic; }
-.tn.open rect{ stroke:var(--afn); stroke-dasharray:4 3; fill:transparent; }
-.tn.err rect{ stroke:var(--trap); fill:var(--trap-fill); stroke-width:2; }
-.tn.sel rect{ stroke-width:2.6; filter:drop-shadow(0 0 4px var(--accent-soft)); }
-.tn:hover rect, .tn:focus-visible rect{ stroke-width:2.4; }
-
-.selbox{ margin-top:10px; padding:10px 12px; border:1px dashed var(--accent); border-radius:8px; font-size:13px; }
 .frontier{ margin-top:10px; }
 .fv{ display:block; font-size:15px; padding:6px 10px; background:var(--code-bg); border-radius:7px; overflow-x:auto; white-space:nowrap; }
 

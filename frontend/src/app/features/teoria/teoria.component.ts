@@ -7,6 +7,7 @@ import { EditorStateService } from '../../core/services/editor-state.service';
 import { ThemeService } from '../../core/services/theme.service';
 import { AutomatonModel } from '../../domain/automaton';
 import { computeLayout, Layout, R } from '../../domain/render';
+import { ExerciseComponent } from '../../shared/exercise.component';
 import { EXERCICIOS } from './pratica.content';
 import { Block, CHAPTERS, Chapter, NoteKind, Section } from './teoria.content';
 
@@ -53,6 +54,7 @@ function blockText(b: Block): string {
     case 'code': return b.text;
     case 'note': return `${b.title ?? ''} ${b.html}`;
     case 'fig': return b.caption;
+    case 'ex': return `${b.ex.label} ${b.ex.prompt}`;
   }
 }
 
@@ -107,7 +109,7 @@ const NOTE_LABEL: Record<NoteKind, string> = { def: 'Definição', tip: 'Dica', 
 @Component({
   selector: 'app-teoria',
   standalone: true,
-  imports: [RouterLink],
+  imports: [RouterLink, ExerciseComponent],
   templateUrl: './teoria.component.html',
   styleUrl: './teoria.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,

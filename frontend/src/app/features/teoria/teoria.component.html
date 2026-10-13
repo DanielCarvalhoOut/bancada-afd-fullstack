@@ -97,7 +97,8 @@
         <h1><span class="num mono">{{ current().num }}</span>{{ current().section.title }}</h1>
         @if (opensChapter()) { <p class="lead">{{ current().chapter.summary }}</p> }
 
-        @for (b of current().section.blocks; track $index) {
+        <!-- track b: ao trocar de seção os blocos (e o estado dos exercícios) são recriados -->
+        @for (b of current().section.blocks; track b) {
           @switch (b.t) {
             @case ('p') { <p [innerHTML]="b.html"></p> }
             @case ('h') { <h2>{{ b.text }}</h2> }
@@ -121,6 +122,7 @@
               </div>
             }
             @case ('code') { <pre class="code mono">{{ b.text }}</pre> }
+            @case ('ex') { <app-exercise [ex]="b.ex" /> }
             @case ('note') {
               <aside class="note" [attr.data-kind]="b.kind">
                 <div class="note-k mono">{{ noteLabel[b.kind] }}@if (b.title) { <span> · {{ b.title }}</span> }</div>

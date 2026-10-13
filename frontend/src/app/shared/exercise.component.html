@@ -1,0 +1,82 @@
+<section class="ex" [attr.data-v]="last()">
+  <header class="ex-h">
+    <span class="lbl">{{ ex().label }}</span>
+    <span class="kind mono">{{ kindLabel() }}</span>
+    <span class="grow"></span>
+    @switch (last()) {
+      @case ('ok') { <span class="badge" data-v="ok">✓ correto</span> }
+      @case ('partial') { <span class="badge" data-v="partial">◐ quase</span> }
+      @case ('bad') { <span class="badge" data-v="bad">✗ revisar</span> }
+    }
+  </header>
+  <div class="prompt" [innerHTML]="ex().prompt"></div>
+
+  @switch (kind()) {
+    @case ('choice') {
+      <div class="choices" role="radiogroup" [attr.aria-label]="ex().label">
+        @for (o of options(); track $index; let i = $index) {
+          <label class="ch" [class.on]="answer() === '' + i">
+            <input type="radio" [name]="ex().id" [checked]="answer() === '' + i" (change)="setAnswer('' + i)" />
+            <span>{{ o }}</span>
+          </label>
+        }
+      </div>
+    }
+    @case ('tree') {
+      <label class="lab mono" [attr.for]="ex().id">Árvore — nó[filhos], ou clique nos nós abaixo</label>
+      <textarea class="inp code" [id]="ex().id" rows="2" spellcheck="false" autocomplete="off" [attr.maxlength]="6000"
+                [value]="answer()" (input)="setAnswer($any($event.target).value)"></textarea>
+      <app-tree-editor [grammar]="grammar()" [text]="answer()" [word]="wordTokens()" (textChange)="setAnswer($event)" />
+    }
+    @default {
+      <textarea class="inp" [class.code]="kind() !== 'concept'" [id]="ex().id" [rows]="rows()" spellcheck="false" autocomplete="off"
+                [attr.maxlength]="6000" [placeholder]="placeholder()" [attr.aria-label]="'Resposta ' + ex().label"
+                [value]="answer()" (input)="setAnswer($any($event.target).value)"></textarea>
+    }
+  }
+
+  @if (lastForm(); as f) {
+    <div class="next">
+      <span class="lab mono">Próximo passo: clique num não terminal</span>
+      <div class="tokens">
+        @for (s of f; track $index; let i = $index) {
+          @if (isNTsym(s)) {
+            <button type="button" class="tok nt" [class.on]="pickPos() === i" (click)="pick(i)">{{ s }}</button>
+          } @else { <span class="tok">{{ s }}</span> }
+        }
+      </div>
+      @if (pickOptions().length) {
+        <div class="opts">@for (p of pickOptions(); track p.index) { <button type="button" class="opt mono" (click)="applyStep(p)">{{ prodText(p) }}</button> }</div>
+      }
+    </div>
+  }
+
+  <div class="acts">
+    <button type="button" class="tbtn primary" (click)="check()">Corrigir</button>
+    <button type="button" class="tbtn" (click)="showAns.set(!showAns())" [attr.aria-expanded]="showAns()">{{ showAns() ? 'Ocultar resposta' : 'Ver resposta' }}</button>
+    <button type="button" class="mini" (click)="reset()">Recomeçar</button>
+    @if (canOpenLab()) { <button type="button" class="mini" (click)="openInLab()">Abrir em Derivações ↗</button> }
+  </div>
+
+  @if (feedback(); as f) {
+    <div class="fb" [attr.data-v]="f.verdict" [class.stale]="stale()" role="status">
+      <div><b>{{ f.title }}</b>@if (stale()) { <span class="st"> Você alterou a resposta: clique em Corrigir de novo.</span> }</div>
+      @if (f.items.length) {
+        <ul>@for (i of f.items; track $index) { <li [class.ok]="i.ok"><span aria-hidden="true">{{ i.ok ? '✓' : '✗' }}</span> {{ i.text }}</li> }</ul>
+      }
+    </div>
+  }
+
+  @if (showAns()) {
+    <div class="ans">
+      <div class="ans-k mono">Resposta-modelo</div>
+      @if (kind() === 'choice') {
+        <p class="mono">{{ correctOption() }}</p>
+      } @else {
+        <pre class="code mono">{{ ex().answer }}</pre>
+      }
+      @if (kind() === 'tree') { <app-tree-editor [grammar]="grammar()" [text]="ex().answer" [readonly]="true" /> }
+      @if (ex().explain; as e) { <div class="exp" [innerHTML]="e"></div> }
+    </div>
+  }
+</section>
