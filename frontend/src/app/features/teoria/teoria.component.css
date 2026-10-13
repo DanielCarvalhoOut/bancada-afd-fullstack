@@ -19,6 +19,13 @@ kbd{ font-family:"IBM Plex Mono",monospace; font-size:10.5px; padding:1px 5px; b
 .search{ display:flex; align-items:center; gap:8px; padding:0 10px; height:38px; border:1px solid var(--line); border-radius:9px; background:var(--surface); color:var(--ink-dim); margin-bottom:14px; }
 .search:focus-within{ border-color:var(--accent); }
 .search input{ flex:1; min-width:0; border:0; outline:0; background:transparent; color:var(--ink); font:inherit; font-size:13.5px; }
+/* abas: teoria × prática */
+.parts{ display:grid; grid-template-columns:1fr 1fr; gap:4px; padding:3px; margin-bottom:14px; border:1px solid var(--line); border-radius:9px; background:var(--surface); }
+.part{ display:flex; flex-direction:column; align-items:flex-start; gap:1px; padding:6px 9px; border-radius:6px; font-size:12.5px; font-weight:500; line-height:1.25; color:var(--ink-dim); }
+.part small{ font-size:10.5px; color:var(--ink-faint); }
+.part:hover{ background:var(--surface-2); color:var(--ink); }
+.part.on{ background:var(--accent-soft); color:var(--ink); }
+.part.on small{ color:var(--accent); }
 .toc ol{ list-style:none; margin:0; padding:0; }
 .toc .n{ flex:none; min-width:26px; font-size:11px; color:var(--ink-faint); padding-top:2px; font-variant-numeric:tabular-nums; }
 .ch, .secs a, .res a{ display:flex; gap:8px; padding:7px 8px; border-radius:7px; line-height:1.35; }
@@ -68,6 +75,7 @@ td:first-child{ font-family:"IBM Plex Mono",monospace; font-size:13px; white-spa
 .note[data-kind="warn"]{ --k:var(--trap); background:var(--trap-fill); }
 .note[data-kind="ex"]{ --k:var(--afn); }
 .note[data-kind="def"]{ --k:var(--afd); }
+.note[data-kind="q"]{ --k:var(--ink-dim); background:var(--surface-2); }
 .note-k{ font-size:10.5px; font-weight:600; letter-spacing:.1em; text-transform:uppercase; color:var(--k); }
 .note-k span{ letter-spacing:.04em; text-transform:none; font-size:12px; color:var(--ink); }
 .note-b{ margin-top:4px; font-size:16px; line-height:1.65; }

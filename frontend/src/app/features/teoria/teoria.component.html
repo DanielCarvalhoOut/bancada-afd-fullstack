@@ -7,7 +7,7 @@
     <button class="iconbtn toc-toggle" [class.active]="tocOpen()" (click)="tocOpen.set(!tocOpen())" aria-controls="teoria-indice" [attr.aria-expanded]="tocOpen()" title="Índice" aria-label="Mostrar ou ocultar o índice">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="9" y1="6" x2="20" y2="6"></line><line x1="9" y1="12" x2="20" y2="12"></line><line x1="9" y1="18" x2="20" y2="18"></line><circle cx="4.5" cy="6" r="1"></circle><circle cx="4.5" cy="12" r="1"></circle><circle cx="4.5" cy="18" r="1"></circle></svg>
     </button>
-    <div class="brand mono">teoria</div>
+    <div class="brand mono">{{ part().short.toLowerCase() }}</div>
     <div class="where mono">{{ current().num }} · {{ current().section.title }}</div>
     <div class="spacer"></div>
     <a class="tbtn" routerLink="/bancada" title="Ir para a bancada">
@@ -32,12 +32,21 @@
     @if (tocOpen()) { <div class="scrim" (click)="tocOpen.set(false)" aria-hidden="true"></div> }
 
     <!-- ÍNDICE -->
-    <nav class="toc" id="teoria-indice" [class.open]="tocOpen()" aria-label="Índice da teoria">
+    <nav class="toc" id="teoria-indice" [class.open]="tocOpen()" aria-label="Índice">
       <div class="search">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><line x1="20" y1="20" x2="16.2" y2="16.2"></line></svg>
-        <input id="teoria-busca" type="search" placeholder="Buscar (ex.: fecho, Thompson)" autocomplete="off" maxlength="60"
+        <input id="teoria-busca" type="search" placeholder="Buscar (ex.: fecho, questão 2)" autocomplete="off" maxlength="60"
                [value]="query()" (input)="query.set($any($event.target).value)" aria-label="Buscar na teoria" />
         <kbd class="mono" aria-hidden="true">/</kbd>
+      </div>
+
+      <!-- as duas partes do livro -->
+      <div class="parts" role="tablist" aria-label="Parte do livro">
+        @for (p of parts; track p.id) {
+          <a class="part" role="tab" [routerLink]="partLink(p)" [class.on]="p === part()" [attr.aria-selected]="p === part()" (click)="clearSearch()">
+            <span>{{ p.label }}</span><small class="mono">{{ sectionCount(p) }}</small>
+          </a>
+        }
       </div>
 
       @if (results(); as res) {
@@ -47,24 +56,24 @@
             <li>
               <a [routerLink]="['/teoria', e.section.id]" (click)="clearSearch()" [class.cur]="e === current()">
                 <span class="n mono">{{ e.num }}</span>
-                <span><b>{{ e.section.title }}</b><small>{{ e.chapter.title }}</small></span>
+                <span><b>{{ e.section.title }}</b><small>{{ e.part.short }} · {{ e.chapter.title }}</small></span>
               </a>
             </li>
           }
         </ol>
       } @else {
         <ol class="chapters">
-          @for (c of chapters; track c.id; let ci = $index) {
+          @for (c of part().chapters; track c.id; let ci = $index) {
             <li [class.here]="c === current().chapter">
               <a class="ch" [routerLink]="['/teoria', c.sections[0].id]">
-                <span class="n mono">{{ ci + 1 }}</span><span>{{ c.title }}</span>
+                <span class="n mono">{{ part().prefix }}{{ ci + 1 }}</span><span>{{ c.title }}</span>
               </a>
               @if (c === current().chapter) {
                 <ol class="secs">
                   @for (s of c.sections; track s.id; let si = $index) {
                     <li>
                       <a [routerLink]="['/teoria', s.id]" [class.cur]="s === current().section" [attr.aria-current]="s === current().section ? 'page' : null">
-                        <span class="n mono">{{ ci + 1 }}.{{ si + 1 }}</span><span>{{ s.title }}</span>
+                        <span class="n mono">{{ part().prefix }}{{ ci + 1 }}.{{ si + 1 }}</span><span>{{ s.title }}</span>
                       </a>
                     </li>
                   }
@@ -79,7 +88,7 @@
     <!-- LEITURA -->
     <main class="page">
       <article>
-        <div class="eyebrow mono">Capítulo {{ current().chapterNum }} · {{ current().chapter.title }}</div>
+        <div class="eyebrow mono">{{ part().short }} · {{ part().chapterWord }} {{ current().chapterNum }} · {{ current().chapter.title }}</div>
         <h1><span class="num mono">{{ current().num }}</span>{{ current().section.title }}</h1>
         @if (opensChapter()) { <p class="lead">{{ current().chapter.summary }}</p> }
 
@@ -165,7 +174,7 @@
           </a>
         }
       </nav>
-      <div class="foot mono">Seção {{ current().index + 1 }} de {{ total }} · <kbd>←</kbd> <kbd>→</kbd> navegam · <kbd>/</kbd> busca</div>
+      <div class="foot mono">{{ part().label }} · seção {{ current().partIndex + 1 }} de {{ partTotal() }} · <kbd>←</kbd> <kbd>→</kbd> navegam · <kbd>/</kbd> busca</div>
     </main>
   </div>
 </div>

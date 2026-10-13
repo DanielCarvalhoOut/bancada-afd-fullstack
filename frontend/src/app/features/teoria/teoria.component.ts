@@ -7,13 +7,31 @@ import { EditorStateService } from '../../core/services/editor-state.service';
 import { ThemeService } from '../../core/services/theme.service';
 import { AutomatonModel } from '../../domain/automaton';
 import { computeLayout, Layout, R } from '../../domain/render';
+import { EXERCICIOS } from './pratica.content';
 import { Block, CHAPTERS, Chapter, NoteKind, Section } from './teoria.content';
+
+/** As duas partes do livro: teoria e exercícios resolvidos (mesmo leitor, mesma rota). */
+export interface Part {
+  id: 'teoria' | 'pratica';
+  label: string;         // título da aba
+  short: string;         // rótulo curto (topbar, resultados de busca)
+  chapterWord: string;   // "Capítulo" / "Lista"
+  prefix: string;        // prefixo da numeração: "4.2" / "E1.2"
+  chapters: Chapter[];
+}
+
+const PARTS: Part[] = [
+  { id: 'teoria', label: 'Conteúdos teóricos', short: 'Teoria', chapterWord: 'Capítulo', prefix: '', chapters: CHAPTERS },
+  { id: 'pratica', label: 'Exercícios resolvidos', short: 'Prática', chapterWord: 'Lista', prefix: 'E', chapters: EXERCICIOS },
+];
 
 /** Seção "achatada": posição no livro + texto normalizado para a busca. */
 interface Entry {
-  index: number;      // posição global (0..N-1), para anterior/próxima
-  num: string;        // "4.2"
-  chapterNum: number; // 4
+  index: number;      // posição global (0..N-1)
+  part: Part;
+  partIndex: number;  // posição dentro da parte, para anterior/próxima e rodapé
+  num: string;        // "4.2" ou "E1.2"
+  chapterNum: string; // "4" ou "E1"
   chapter: Chapter;
   section: Section;
   haystack: string;   // texto sem tags/acentos, minúsculo
@@ -40,18 +58,24 @@ function blockText(b: Block): string {
 
 // O conteúdo é estático: o índice e os layouts das figuras são calculados uma
 // única vez por carga do módulo (que é lazy), não a cada detecção de mudança.
-const ENTRIES: Entry[] = CHAPTERS.flatMap((chapter, ci) =>
-  chapter.sections.map((section, si) => ({
-    index: 0,
-    num: `${ci + 1}.${si + 1}`,
-    chapterNum: ci + 1,
-    chapter,
-    section,
-    haystack: norm([chapter.title, section.title, ...section.blocks.map(blockText)].join(' ')),
-  })),
+const ENTRIES: Entry[] = PARTS.flatMap((part) =>
+  part.chapters.flatMap((chapter, ci) =>
+    chapter.sections.map((section, si) => ({
+      index: 0,
+      part,
+      partIndex: 0,
+      num: `${part.prefix}${ci + 1}.${si + 1}`,
+      chapterNum: `${part.prefix}${ci + 1}`,
+      chapter,
+      section,
+      haystack: norm([chapter.title, section.title, ...section.blocks.map(blockText)].join(' ')),
+    })),
+  ).map((e, partIndex) => ({ ...e, partIndex })),
 ).map((e, index) => ({ ...e, index }));
 
 const BY_ID = new Map(ENTRIES.map((e) => [e.section.id, e]));
+/** Total de seções por parte (rodapé "Seção x de n"). */
+const PART_TOTAL = new Map(PARTS.map((p) => [p.id, ENTRIES.filter((e) => e.part === p).length]));
 type FigLayout = Layout & { w: number; h: number };
 const LAYOUTS = new WeakMap<AutomatonModel, FigLayout>();
 
@@ -73,7 +97,7 @@ function tight(l: Layout): FigLayout {
   return { ...l, viewBox: `${x} ${y} ${w} ${h}`, w, h };
 }
 
-const NOTE_LABEL: Record<NoteKind, string> = { def: 'Definição', tip: 'Dica', warn: 'Cuidado', ex: 'Exemplo' };
+const NOTE_LABEL: Record<NoteKind, string> = { def: 'Definição', tip: 'Dica', warn: 'Cuidado', ex: 'Exemplo', q: 'Enunciado' };
 
 /**
  * Livro de teoria: índice por capítulos, leitura por seção (uma rota por seção,
@@ -95,13 +119,15 @@ export class TeoriaComponent {
   private readonly editor = inject(EditorStateService);
   readonly theme = inject(ThemeService);
 
-  readonly chapters = CHAPTERS;
-  readonly total = ENTRIES.length;
+  readonly parts = PARTS;
   readonly noteLabel = NOTE_LABEL;
 
   readonly current = signal<Entry>(ENTRIES[0]);
-  readonly prev = computed(() => ENTRIES[this.current().index - 1] ?? null);
-  readonly next = computed(() => ENTRIES[this.current().index + 1] ?? null);
+  readonly part = computed(() => this.current().part);
+  readonly partTotal = computed(() => PART_TOTAL.get(this.part().id) ?? 0);
+  // anterior/próxima não atravessam de uma parte para a outra
+  readonly prev = computed(() => this.sibling(-1));
+  readonly next = computed(() => this.sibling(1));
   /** É a primeira seção do capítulo? (mostra o resumo do capítulo como abertura) */
   readonly opensChapter = computed(() => this.current().section === this.current().chapter.sections[0]);
 
@@ -133,12 +159,23 @@ export class TeoriaComponent {
     }
     this.current.set(hit);
     this.tocOpen.set(false);
-    this.title.setTitle(`${hit.num} ${hit.section.title} — Teoria`);
+    this.title.setTitle(`${hit.num} ${hit.section.title} — ${hit.part.short}`);
     this.writeLast(hit.section.id);
     if (typeof window !== 'undefined') window.scrollTo({ top: 0 });
   }
 
-  chapterNum(c: Chapter): number { return CHAPTERS.indexOf(c) + 1; }
+  private sibling(step: 1 | -1): Entry | null {
+    const e = ENTRIES[this.current().index + step];
+    return e && e.part === this.part() ? e : null;
+  }
+
+  /** Destino da aba: a seção atual, se já está nessa parte; senão a primeira da parte. */
+  partLink(p: Part): string[] {
+    const id = this.part() === p ? this.current().section.id : p.chapters[0].sections[0].id;
+    return ['/teoria', id];
+  }
+
+  sectionCount(p: Part): number { return PART_TOTAL.get(p.id) ?? 0; }
 
   layout(m: AutomatonModel): FigLayout {
     let l = LAYOUTS.get(m);

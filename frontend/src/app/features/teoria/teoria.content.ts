@@ -7,7 +7,7 @@ import { AutomatonKind, AutomatonModel } from '../../domain/automaton';
  * podem ser abertos nela. O campo `re` (opcional) é a linguagem esperada da
  * figura em regex JS — não aparece na tela; serve só para conferência.
  */
-export type NoteKind = 'def' | 'tip' | 'warn' | 'ex';
+export type NoteKind = 'def' | 'tip' | 'warn' | 'ex' | 'q';
 
 export type Block =
   | { t: 'p'; html: string }
@@ -25,7 +25,7 @@ type S = [name: string, x: number, y: number, flags?: string]; // flags: i = ini
 type T = [from: string, to: string, syms: string];
 
 /** Monta um modelo compacto: estados com posição e transições "a,b". */
-function aut(kind: AutomatonKind, states: S[], trans: T[], alphabet?: string[]): AutomatonModel {
+export function aut(kind: AutomatonKind, states: S[], trans: T[], alphabet?: string[]): AutomatonModel {
   return {
     kind,
     alphabet,
@@ -85,6 +85,11 @@ const F_QUADRO_GR = aut('afn',
   [['A', 100, 150, 'i'], ['B', 290, 80], ['C', 480, 150, 'f']],
   [['A', 'B', 'a'], ['A', 'C', 'a'], ['B', 'C', 'b'], ['C', 'C', 'c']],
   ['a', 'b', 'c']);
+
+// S → 0S | B, B → 1B | ε, depois de eliminar a regra unitária e completar com o morto.
+const F_UNITARIA = aut('afd',
+  [['S', 100, 130, 'if'], ['B', 290, 130, 'f'], ['D', 480, 130]],
+  [['S', 'S', '0'], ['S', 'B', '1'], ['B', 'B', '1'], ['B', 'D', '0'], ['D', 'D', '0,1']]);
 
 const F_GR_EXEMPLO = aut('afd',
   [['S', 100, 130, 'i'], ['A', 290, 130], ['F', 480, 130, 'f']],
@@ -606,7 +611,13 @@ export const CHAPTERS: Chapter[] = [
             ['A → aB', 'transição A —a→ B'],
             ['A → ε', 'A é estado final'],
             ['A → a', 'transição A —a→ F, com F um estado final novo, sem saídas'],
+            ['A → B (unitária)', 'transição <b>ε</b> de A para B: vira AFN-ε'],
           ] },
+          { t: 'h', text: 'Anatomia de uma regra' },
+          { t: 'p', html: 'Cada alternativa separada por <b>|</b> é <b>uma transição</b>. A leitura é sempre a mesma: quem está à esquerda da seta é a <b>origem</b>, o terminal é o <b>rótulo</b> e o não terminal no fim é o <b>destino</b>.' },
+          { t: 'code', text: 'S → 0 S\n│   │ └── destino (para onde vai)\n│   └──── símbolo lido (rótulo da seta)\n└──────── origem (de onde sai)\n\nS → 0S | 1B   ⇒   S —0→ S (laço)   e   S —1→ B' },
+          { t: 'note', kind: 'warn', html: 'Quem se move é o <b>estado</b>, não o símbolo: “em S, lendo 0, continua em S”. O terminal é só o rótulo da seta, e terminais <b>nunca</b> viram estados.' },
+          { t: 'note', kind: 'tip', html: 'Mesmo terminal duas vezes na mesma regra (S → 0S | 0C) = duas setas com 0 saindo de S = <b>AFN</b>. Determinize antes de montar o AFD.' },
         ],
       },
       {
@@ -634,6 +645,45 @@ export const CHAPTERS: Chapter[] = [
           ] },
           { t: 'p', html: 'Exemplo: S → aS | bA, A → aA | b. A regra A → b pede o estado F.' },
           { t: 'fig', model: F_GR_EXEMPLO, caption: 'Gera a*ba*b. Para um AFD completo, faltaria o estado morto (S e A já estão completos; F não tem saídas).', re: '^a*ba*b$' },
+        ],
+      },
+      {
+        id: 'gr-finais',
+        title: 'De onde vêm os estados finais',
+        blocks: [
+          { t: 'p', html: 'Um estado é final quando <b>a palavra pode terminar nele</b>. Numa gramática regular isso acontece em dois casos, e esquecer o segundo é o erro mais comum:' },
+          { t: 'table', head: ['Regra', 'Efeito no autômato'], rows: [
+            ['A → ε', 'A é <b>final</b>'],
+            ['A → a', 'seta A —a→ <b>F</b>, com F um estado extra <b>final</b>'],
+          ] },
+          { t: 'p', html: 'Exemplo: em X → a | b, X não tem ε, mas as duas regras terminam a palavra. Nasce o estado F (final) com X —a→ F e X —b→ F. Procurando só o ε, a gramática ficaria sem nenhum estado final, e o autômato não aceitaria nada.' },
+          { t: 'list', items: [
+            '<b>S → ε</b> no símbolo de partida: o estado <b>inicial</b> também é final, e ε ∈ L(G).',
+            'Depois de <b>determinizar</b>, um estado-conjunto como {A, F} é final se <b>contém pelo menos um</b> final do AFN.',
+            'No caminho inverso (AF → GR), todo estado final p ganha a regra <b>p → ε</b>.',
+          ] },
+          { t: 'note', kind: 'warn', title: 'A → ε não torna o autômato AFN', html: 'O ε numa regra <b>A → ε</b> só marca A como final; não cria seta nenhuma. Quem cria transição ε é a regra unitária <b>A → B</b>.' },
+        ],
+      },
+      {
+        id: 'gr-unitarias',
+        title: 'Regras unitárias (A → B)',
+        blocks: [
+          { t: 'p', html: 'Em <b>A → B</b> o não terminal muda <b>sem gerar símbolo nenhum</b>. No autômato isso é uma <b>transição ε</b>: A passa para B “de graça”, sem ler nada. O resultado é um <b>AFN-ε</b>, que a bancada no espaço AFD não aceita.' },
+          { t: 'code', text: 'S → 0S | B\n\nS —0→ S     (laço)\nS —ε→ B     (pula para B sem ler nada)' },
+          { t: 'h', text: 'Eliminando: copie as regras de B para A' },
+          { t: 'code', text: 'Antes:              Depois:\nS → 0S | B          S → 0S | 1B | ε     ← herdou as regras de B\nB → 1B | ε          B → 1B | ε' },
+          { t: 'table', head: ['Regra', 'Transição'], rows: [
+            ['S → 0S', 'laço em S com 0'],
+            ['S → 1B', 'S —1→ B (herdada de B → 1B)'],
+            ['S → ε', 'S é <b>final</b> (herdou o ε de B)'],
+            ['B → 1B', 'laço em B com 1'],
+            ['B → ε', 'B é final'],
+            ['B com 0', 'nenhuma regra → estado morto <b>D</b>'],
+          ] },
+          { t: 'fig', model: F_UNITARIA, caption: 'S → 0S | B, B → 1B | ε já sem a regra unitária: gera 0*1* (zeros e depois uns). D é o estado morto que completa o AFD.', re: '^0*1*$' },
+          { t: 'p', html: 'Pelo caminho do autômato dá o mesmo: fecho-ε(S) = {S, B}, e como B é final, o conjunto {S, B} é final. Com regra unitária simples, eliminar direto na gramática é mais rápido.' },
+          { t: 'note', kind: 'tip', html: 'A bancada <b>rejeita quando trava</b>, então o AFD sem o estado D dá os mesmos resultados. Mas sem D a função δ não é total, e pela definição formal <b>não é AFD</b>. Na prova, desenhe o morto.' },
         ],
       },
       {
