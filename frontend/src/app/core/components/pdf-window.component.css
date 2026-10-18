@@ -35,8 +35,20 @@ a{ color:inherit; }
 /* sem align-items:center: página mais larga que a janela tem que poder rolar para os dois lados (margin:auto vira 0) */
 .scroller{ flex:1; min-height:0; overflow:auto; overscroll-behavior:contain; background:var(--bg); padding:12px; display:flex; flex-direction:column; align-items:flex-start; gap:12px; touch-action:pan-x pan-y; outline:none; }
 .scroller[hidden]{ display:none; }
-.pg{ flex:none; margin-inline:auto; background:#fff; box-shadow:0 1px 3px rgba(0,0,0,.35); }
+.pg{ position:relative; flex:none; margin-inline:auto; background:#fff; box-shadow:0 1px 3px rgba(0,0,0,.35); }
 .pg canvas{ display:block; width:100%; height:100%; }
+/* caneta: camada SVG sobre a página, em unidades do PDF; só captura o ponteiro com a ferramenta ligada */
+.ink{ position:absolute; inset:0; width:100%; height:100%; pointer-events:none; }
+.ink.on{ pointer-events:auto; touch-action:none; cursor:crosshair; }
+.ink[data-tool="eraser"]{ cursor:cell; }
+.ink path{ fill:none; stroke-linecap:round; stroke-linejoin:round; }
+.tb.pen{ display:inline-flex; align-items:center; justify-content:center; margin-left:4px; }
+.tb.on{ border-color:var(--accent); color:var(--accent); background:var(--accent-soft); }
+.tb.txt{ font-size:12px; }
+.inkbar{ background:var(--bg-2); }
+.inkbar .tb{ display:inline-flex; align-items:center; justify-content:center; }
+.sw{ width:24px; height:24px; border-radius:50%; border:2px solid var(--line); background:var(--sw); padding:0; margin:0 2px; }
+.sw.on{ outline:2px solid var(--accent); outline-offset:2px; }
 .state{ margin:auto; padding:24px; font-size:13px; color:var(--ink-dim); text-align:center; }
 .state a{ color:var(--accent); }
 
