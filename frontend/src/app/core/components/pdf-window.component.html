@@ -42,11 +42,34 @@
       <button class="tb" (click)="zoomBy(1 / 1.2)" title="Diminuir zoom" aria-label="Diminuir zoom">−</button>
       <button class="tb pct mono" (click)="fit()" [class.on]="fitWidth()" title="Ajustar à largura">{{ percent() }}%</button>
       <button class="tb" (click)="zoomBy(1.2)" title="Aumentar zoom" aria-label="Aumentar zoom">+</button>
+      <button class="tb pen" [class.on]="ink.tool()" (click)="ink.togglePen()" [attr.aria-pressed]="!!ink.tool()"
+              [title]="ink.tool() ? 'Parar de anotar' : 'Caneta: escrever no PDF'" aria-label="Caneta">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20l4.5-1 10-10a2.1 2.1 0 0 0-3-3l-10 10L4 20z"/><path d="M13.5 6.5l3 3"/></svg>
+      </button>
       <span class="grow"></span>
       <button class="tb" (click)="goTo(current() - 1)" [disabled]="current() <= 1" aria-label="Página anterior">‹</button>
       <span class="mono pgn">{{ current() }} / {{ pages().length || '–' }}</span>
       <button class="tb" (click)="goTo(current() + 1)" [disabled]="current() >= pages().length" aria-label="Próxima página">›</button>
     </div>
+
+    @if (ink.tool() && !svc.minimized()) {
+      <div class="tools inkbar" role="toolbar" aria-label="Ferramentas da caneta">
+        @for (c of inkColors; track c.value) {
+          <button class="sw" [style.--sw]="c.value" [class.on]="ink.tool() === 'pen' && ink.color() === c.value"
+                  (click)="ink.usePen(c.value)" [title]="'Caneta ' + c.label" [attr.aria-label]="'Caneta ' + c.label"
+                  [attr.aria-pressed]="ink.tool() === 'pen' && ink.color() === c.value"></button>
+        }
+        <button class="tb" [class.on]="ink.tool() === 'eraser'" (click)="ink.toggleEraser()" [attr.aria-pressed]="ink.tool() === 'eraser'"
+                title="Borracha: apaga o traço que tocar" aria-label="Borracha">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 20h11"/><path d="M5.5 14.5l8-8a2 2 0 0 1 2.8 0l2.2 2.2a2 2 0 0 1 0 2.8L12 18H8.5z"/></svg>
+        </button>
+        <button class="tb" (click)="ink.undo()" [disabled]="!ink.canUndo()" title="Desfazer" aria-label="Desfazer">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14L4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 0 12h-3"/></svg>
+        </button>
+        <span class="grow"></span>
+        <button class="tb txt" (click)="ink.clear()" [disabled]="!ink.hasInk()" title="Apagar todas as anotações deste PDF (dá para desfazer)">Limpar</button>
+      </div>
+    }
 
     <div class="scroller" #scroller [hidden]="svc.minimized()" tabindex="0" aria-label="Páginas do PDF"
          (wheel)="onWheel($event)" (scroll)="onScroll()"
@@ -58,6 +81,17 @@
       @for (p of pages(); track $index; let i = $index) {
         <div class="pg" [style.width.px]="p.w * scale()" [style.height.px]="p.h * scale()">
           <canvas [attr.data-page]="i + 1" [attr.aria-label]="'Página ' + (i + 1)"></canvas>
+          <svg class="ink" [class.on]="ink.tool()" [attr.data-tool]="ink.tool()" [attr.viewBox]="'0 0 ' + p.w + ' ' + p.h"
+               preserveAspectRatio="none" aria-hidden="true"
+               (pointerdown)="onInkDown($event, i + 1, p.w, p.h)" (pointermove)="onInkMove($event)"
+               (pointerup)="onInkUp($event)" (pointercancel)="cancelInk()">
+            @for (s of ink.pages()[i + 1] ?? []; track s) {
+              <path [attr.d]="s.d" [attr.stroke]="s.color" [attr.stroke-width]="s.width" />
+            }
+            @if (live(); as l) {
+              @if (l.page === i + 1) { <path [attr.d]="l.d" [attr.stroke]="ink.color()" [attr.stroke-width]="inkWidth" /> }
+            }
+          </svg>
         </div>
       }
     </div>

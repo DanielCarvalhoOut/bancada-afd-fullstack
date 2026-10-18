@@ -4,6 +4,7 @@ import {
 } from '@angular/core';
 import type { PDFDocumentProxy, RenderTask } from 'pdfjs-dist';
 import { PdfDoc, PdfWindowService } from '../services/pdf-window.service';
+import { INK_COLORS, INK_WIDTH, PdfInkService, pathOf } from '../services/pdf-ink.service';
 
 type PdfJs = typeof import('pdfjs-dist');
 
@@ -30,6 +31,8 @@ function loadPdfJs(): Promise<PdfJs> {
 const MIN_SCALE = 0.4;
 const MAX_SCALE = 4;
 const SNAP_PX = 28;
+const ERASER_PX = 10;      // raio da borracha na tela, convertido para unidades do PDF
+const MIN_STEP = 0.6;      // distância mínima entre pontos de um traço (unidades do PDF)
 const clamp = (v: number, lo: number, hi: number) => Math.min(Math.max(v, lo), hi);
 
 /**
@@ -46,6 +49,11 @@ const clamp = (v: number, lo: number, hi: number) => Math.min(Math.max(v, lo), h
 })
 export class PdfWindowComponent implements OnDestroy {
   readonly svc = inject(PdfWindowService);
+  readonly ink = inject(PdfInkService);
+  readonly inkColors = INK_COLORS;
+  readonly inkWidth = INK_WIDTH;
+  /** Traço em andamento: desenhado à parte e só gravado ao soltar. */
+  readonly live = signal<{ page: number; d: string } | null>(null);
   private readonly injector = inject(Injector);
   private readonly scroller = viewChild<ElementRef<HTMLDivElement>>('scroller');
 
@@ -75,11 +83,12 @@ export class PdfWindowComponent implements OnDestroy {
   private resize: { kind: 'corner' | 'edge'; x0: number; y0: number; w0: number; h0: number } | null = null;
   private pinch = new Map<number, { x: number; y: number }>();
   private pinchStart: { d: number; s: number } | null = null;
+  private inkPointer: { id: number; page: number; svg: SVGSVGElement; w: number; h: number; pts: number[] } | null = null;
 
   constructor() {
     effect(() => {
       const d = this.svc.doc();
-      if (d) untracked(() => void this.load(d));
+      if (d) untracked(() => { this.ink.load(d.id); void this.load(d); });
     }, { allowSignalWrites: true });
 
     afterNextRender(() => {
@@ -251,6 +260,60 @@ export class PdfWindowComponent implements OnDestroy {
   private pinchDist(): number {
     const [a, b] = [...this.pinch.values()];
     return Math.hypot(a.x - b.x, a.y - b.y);
+  }
+
+  // ───────────────────────── caneta ─────────────────────────
+  /** Ponteiro na tela → coordenadas da página em unidades do PDF (independe do zoom). */
+  private toPage(svg: SVGSVGElement, w: number, h: number, e: { clientX: number; clientY: number }): [number, number] {
+    const r = svg.getBoundingClientRect();
+    return [((e.clientX - r.left) / Math.max(r.width, 1)) * w, ((e.clientY - r.top) / Math.max(r.height, 1)) * h];
+  }
+
+  onInkDown(e: PointerEvent, page: number, w: number, h: number): void {
+    const tool = this.ink.tool();
+    if (!tool || (e.pointerType === 'mouse' && e.button !== 0)) return;
+    e.stopPropagation(); // não deixa a pinça do scroller tratar o mesmo dedo
+    if (this.inkPointer) { this.cancelInk(); return; } // segundo dedo: desiste do traço
+    e.preventDefault();
+    const svg = e.currentTarget as SVGSVGElement;
+    svg.setPointerCapture(e.pointerId);
+    const [x, y] = this.toPage(svg, w, h, e);
+    this.inkPointer = { id: e.pointerId, page, svg, w, h, pts: [x, y] };
+    if (tool === 'eraser') {
+      this.ink.startGesture();
+      this.ink.eraseAt(page, x, y, ERASER_PX / this.scale());
+    } else {
+      this.live.set({ page, d: pathOf([x, y]) });
+    }
+  }
+
+  onInkMove(e: PointerEvent): void {
+    const p = this.inkPointer;
+    if (!p || e.pointerId !== p.id) return;
+    e.stopPropagation();
+    // eventos agrupados pelo navegador entre dois quadros: traço mais liso
+    const events = e.getCoalescedEvents?.() ?? [];
+    for (const ev of events.length ? events : [e]) {
+      const [x, y] = this.toPage(p.svg, p.w, p.h, ev);
+      if (this.ink.tool() === 'eraser') { this.ink.eraseAt(p.page, x, y, ERASER_PX / this.scale()); continue; }
+      const n = p.pts.length;
+      if (Math.hypot(x - p.pts[n - 2], y - p.pts[n - 1]) >= MIN_STEP) p.pts.push(x, y);
+    }
+    if (this.ink.tool() === 'pen') this.live.set({ page: p.page, d: pathOf(p.pts) });
+  }
+
+  onInkUp(e: PointerEvent): void {
+    const p = this.inkPointer;
+    if (!p || e.pointerId !== p.id) return;
+    e.stopPropagation();
+    if (this.ink.tool() === 'pen') this.ink.addStroke(p.page, p.pts);
+    this.inkPointer = null;
+    this.live.set(null);
+  }
+
+  cancelInk(): void {
+    this.inkPointer = null;
+    this.live.set(null);
   }
 
   // ───────────────────────── arrastar e encaixar ─────────────────────────
