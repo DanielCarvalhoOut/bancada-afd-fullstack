@@ -13,7 +13,7 @@ code{ font-family:"IBM Plex Mono",monospace; font-size:.92em; background:var(--s
 
 .panel{ min-width:0; background:var(--surface); border:1px solid var(--line); border-radius:12px; padding:14px 16px 16px; }
 .gram{ position:sticky; top:calc(var(--top) + 16px); max-height:calc(100vh - var(--top) - 32px); overflow:auto; }
-.ph{ display:flex; align-items:center; gap:8px; margin-bottom:10px; }
+.ph{ display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin-bottom:10px; }
 .ph h2{ margin:0; font-size:15px; font-weight:600; }
 .k{ width:22px; height:22px; border-radius:6px; display:inline-flex; align-items:center; justify-content:center; font-size:11px; background:var(--accent-soft); color:var(--accent); }
 
@@ -77,15 +77,22 @@ button[disabled]{ opacity:.45; pointer-events:none; }
 .frontier{ margin-top:10px; }
 .fv{ display:block; font-size:15px; padding:6px 10px; background:var(--code-bg); border-radius:7px; overflow-x:auto; white-space:nowrap; }
 
-@media (max-width:900px){
+@container app (max-width:900px){
   .work{ grid-template-columns:minmax(0, 1fr); padding:12px; }
   .gram{ position:static; max-height:none; }
   .rules{ display:none; } /* repete o textarea; no celular só ocupa espaço */
 }
-@media (max-width:560px){
+@container app (max-width:560px){
   .where, .tbtn .lbl{ display:none; }
   .wrow{ flex-direction:column; }
   .report li{ grid-template-columns:18px minmax(0, 1fr); }
   .report .why{ grid-column:2; }
   .report .form{ white-space:normal; overflow-wrap:anywhere; }
+}
+
+/* toque: botões pequenos ganham altura de dedo (no mouse fica como está) */
+@media (pointer:coarse){
+  .mini{ min-height:36px; padding:6px 12px; }
+  .tok{ min-width:36px; min-height:36px; }
+  .opt{ min-height:36px; }
 }
