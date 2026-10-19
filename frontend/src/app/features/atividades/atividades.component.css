@@ -5,12 +5,13 @@ a{ text-decoration:none; }
 .spacer{ flex:1; }
 .tbtn .sm{ display:none; }
 
-.wrap{ max-width:1080px; margin:0 auto; padding:32px clamp(16px, 4vw, 40px) 48px; }
+/* mais largo: o mesmo texto quebra em menos linhas e os cards ficam mais baixos */
+.wrap{ max-width:1240px; margin:0 auto; padding:24px clamp(16px, 4vw, 40px) 28px; }
 .eyebrow{ font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:var(--ink-faint); }
 h1{ margin:8px 0 0; font-size:clamp(26px, 4vw, 38px); font-weight:600; letter-spacing:-.012em; }
 .sub{ margin:12px 0 0; max-width:70ch; font-size:15px; line-height:1.6; color:var(--ink-dim); }
 
-.grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(min(100%, 460px), 1fr)); gap:16px; margin-top:26px; }
+.grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(min(100%, 460px), 1fr)); gap:16px; margin-top:20px; }
 .card{ display:flex; gap:18px; padding:18px; background:var(--surface); border:1px solid var(--line); border-radius:12px; }
 .card.open{ border-color:var(--accent); }
 .thumb{ flex:none; }
