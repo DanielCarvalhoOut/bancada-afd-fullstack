@@ -22,6 +22,12 @@ a{ color:inherit; }
 .ib{ width:30px; height:30px; display:inline-flex; align-items:center; justify-content:center; border-radius:7px; border:1px solid transparent; background:transparent; color:var(--ink-dim); text-decoration:none; }
 .ib:hover{ background:var(--surface-2); color:var(--ink); }
 .ib.on{ color:var(--accent); border-color:var(--accent); background:var(--accent-soft); }
+.ib[disabled]{ opacity:.45; pointer-events:none; }
+/* download com anotações: um ponto na cor da caneta avisa que o arquivo leva os traços */
+.ib{ position:relative; }
+.inkdot{ position:absolute; top:5px; right:5px; width:6px; height:6px; border-radius:50%; background:var(--accent); }
+.exp-err{ flex:none; display:flex; align-items:center; gap:8px; padding:8px 10px; font-size:12.5px; line-height:1.45; color:var(--ink); background:var(--trap-fill); border-bottom:1px solid var(--trap); }
+.exp-err .tb{ flex:none; }
 
 .tools{ flex:none; display:flex; align-items:center; gap:4px; padding:6px 8px; border-bottom:1px solid var(--line-soft); }
 .grow{ flex:1; }

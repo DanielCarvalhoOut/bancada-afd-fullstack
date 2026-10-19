@@ -22,9 +22,17 @@
           </button>
           <span class="sep" aria-hidden="true"></span>
         }
-        <a class="ib" [href]="d.url" [attr.download]="d.fileName" title="Baixar PDF" aria-label="Baixar PDF">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11"/><path d="M7 10l5 5 5-5"/><path d="M5 20h14"/></svg>
-        </a>
+        @if (ink.hasInk()) {
+          <!-- com anotações, o download leva os traços gravados no PDF (o original continua em Atividades) -->
+          <button class="ib" (click)="downloadAnnotated()" [disabled]="exporting() || status() !== 'ready'" [attr.aria-busy]="exporting()"
+                  title="Baixar PDF com as anotações" aria-label="Baixar PDF com as anotações">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11"/><path d="M7 10l5 5 5-5"/><path d="M5 20h14"/></svg><span class="inkdot" aria-hidden="true"></span>
+          </button>
+        } @else {
+          <a class="ib" [href]="d.url" [attr.download]="d.fileName" title="Baixar PDF" aria-label="Baixar PDF">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11"/><path d="M7 10l5 5 5-5"/><path d="M5 20h14"/></svg>
+          </a>
+        }
         <button class="ib" (click)="toggleMin()" [title]="svc.minimized() ? 'Restaurar' : 'Minimizar'" [attr.aria-label]="svc.minimized() ? 'Restaurar' : 'Minimizar'">
           @if (svc.minimized()) {
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 15l6-6 6 6"/></svg>
@@ -67,8 +75,14 @@
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14L4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 0 12h-3"/></svg>
         </button>
         <span class="grow"></span>
+        <button class="tb txt" (click)="downloadAnnotated()" [disabled]="!ink.hasInk() || exporting() || status() !== 'ready'" [attr.aria-busy]="exporting()"
+                title="Baixar uma cópia do PDF com as anotações gravadas">{{ exporting() ? 'Gerando…' : 'Baixar anotado' }}</button>
         <button class="tb txt" (click)="ink.clear()" [disabled]="!ink.hasInk()" title="Apagar todas as anotações deste PDF (dá para desfazer)">Limpar</button>
       </div>
+    }
+
+    @if (exportError(); as err) {
+      <div class="exp-err" role="alert">{{ err }} <button type="button" class="tb txt" (click)="exportError.set(null)">Fechar</button></div>
     }
 
     <div class="scroller" #scroller [hidden]="svc.minimized()" tabindex="0" aria-label="Páginas do PDF"

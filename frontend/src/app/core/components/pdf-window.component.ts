@@ -2,9 +2,10 @@ import {
   ChangeDetectionStrategy, Component, ElementRef, HostListener, Injector, OnDestroy,
   afterNextRender, computed, effect, inject, signal, untracked, viewChild,
 } from '@angular/core';
-import type { PDFDocumentProxy, RenderTask } from 'pdfjs-dist';
+import type { PDFDocumentProxy, PageViewport, RenderTask } from 'pdfjs-dist';
 import { PdfDoc, PdfWindowService } from '../services/pdf-window.service';
 import { INK_COLORS, INK_WIDTH, PdfInkService, pathOf } from '../services/pdf-ink.service';
+import { annotatedFileName, pdfWithInk } from '../services/pdf-export';
 
 type PdfJs = typeof import('pdfjs-dist');
 
@@ -65,6 +66,9 @@ export class PdfWindowComponent implements OnDestroy {
   readonly snap = signal<'left' | 'right' | null>(null);
   readonly dragging = signal(false);
   readonly percent = computed(() => Math.round(this.scale() * 100));
+  /** Gerando o PDF com as anotações (o botão fica ocupado). */
+  readonly exporting = signal(false);
+  readonly exportError = signal<string | null>(null);
 
   /** Posição explícita só no modo flutuante; encaixada e folha inferior são por CSS. */
   readonly box = computed(() => {
@@ -314,6 +318,44 @@ export class PdfWindowComponent implements OnDestroy {
   cancelInk(): void {
     this.inkPointer = null;
     this.live.set(null);
+  }
+
+  // ───────────────────────── baixar com anotações ─────────────────────────
+  /** Baixa uma cópia do PDF aberto com os traços da caneta gravados nas páginas. */
+  async downloadAnnotated(): Promise<void> {
+    const doc = this.pdf;
+    const d = this.svc.doc();
+    if (!doc || !d || this.exporting()) return;
+    this.exporting.set(true);
+    this.exportError.set(null);
+    try {
+      const ink = this.ink.pages();
+      // viewport em escala 1 = o mesmo espaço em que os traços foram gravados;
+      // convertToPdfPoint já desfaz o recorte (CropBox) e a rotação da página
+      const viewports = new Map<number, PageViewport>();
+      for (const key of Object.keys(ink)) {
+        const n = Number(key);
+        if (Number.isInteger(n) && n >= 1 && n <= doc.numPages) viewports.set(n, (await doc.getPage(n)).getViewport({ scale: 1 }));
+      }
+      const bytes = await pdfWithInk(await doc.getData(), ink, (n, x, y) => {
+        const [px, py] = viewports.get(n)!.convertToPdfPoint(x, y) as [number, number];
+        return [px, py];
+      });
+      if (this.svc.doc()?.id !== d.id) return; // trocou de documento no meio
+      const url = URL.createObjectURL(new Blob([bytes], { type: 'application/pdf' }));
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = annotatedFileName(d.fileName);
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      // revogar logo após o clique pode cancelar o download em alguns navegadores
+      setTimeout(() => URL.revokeObjectURL(url), 30_000);
+    } catch {
+      this.exportError.set('Não foi possível gerar o PDF com as anotações. Tente de novo; as anotações continuam salvas aqui.');
+    } finally {
+      this.exporting.set(false);
+    }
   }
 
   // ───────────────────────── arrastar e encaixar ─────────────────────────
