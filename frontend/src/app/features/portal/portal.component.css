@@ -16,7 +16,7 @@
 .portal-lead .sub{ margin:14px 0 0; font-size:15px; color:var(--ink-dim); line-height:1.55; max-width:60ch; }
 
 .diptych{ display:grid; grid-template-columns:1fr 1fr; gap:16px; margin:26px 30px 0; align-content:start; }
-@media (max-width:720px){ .diptych{ grid-template-columns:1fr; } }
+@container app (max-width:720px){ .diptych{ grid-template-columns:1fr; } }
 .choice{ position:relative; padding:26px 26px 22px; display:flex; flex-direction:column; justify-content:flex-start; background:var(--surface); border:1px solid var(--line); border-radius:12px; text-align:left; overflow:hidden; transition:border-color .2s, transform .12s; }
 .choice:before{ content:""; position:absolute; left:0; top:0; bottom:0; width:3px; background:var(--sp); opacity:.55; transition:opacity .2s; }
 .choice.afd{ --sp:var(--afd); }
@@ -32,6 +32,12 @@
 .choice:hover .go svg{ transform:translateX(4px); }
 .diagram-mini{ position:absolute; right:22px; top:22px; color:var(--ink-faint); opacity:.7; }
 .choice:hover .diagram-mini{ color:var(--sp); opacity:1; }
+/* card estreito (celular, tela dividida com o PDF): o desenho sai do canto, onde
+   cobriria rótulo e título, e entra no fluxo acima do rótulo */
+.choice{ container:choice / inline-size; }
+@container choice (max-width:480px){
+  .diagram-mini{ position:static; flex:none; margin:0 0 14px; }
+}
 
 .bookcard{ display:flex; align-items:center; gap:18px; margin:16px 30px 0; padding:18px 22px; background:var(--surface); border:1px solid var(--line); border-radius:12px; color:var(--ink); text-decoration:none; transition:border-color .2s, transform .12s; }
 .bookcard:hover{ border-color:var(--ink-dim); transform:translateY(-2px); }
@@ -43,7 +49,7 @@
 .bk-desc{ margin-top:4px; font-size:13.5px; color:var(--ink-dim); line-height:1.55; max-width:80ch; }
 .bk-go{ flex:none; display:inline-flex; align-items:center; gap:8px; font-size:11.5px; letter-spacing:.05em; text-transform:uppercase; color:var(--ink-dim); }
 .bookcard:hover .bk-go{ color:var(--ink); }
-@media (max-width:720px){ .bookcard{ flex-wrap:wrap; } .bk-go{ width:100%; } }
+@container app (max-width:720px){ .bookcard{ flex-wrap:wrap; } .bk-go{ width:100%; } }
 
 .portal-foot{ display:flex; flex-wrap:wrap; gap:8px 22px; padding:22px 30px 26px; margin-top:auto; font-family:"IBM Plex Mono",monospace; font-size:11px; letter-spacing:.06em; text-transform:uppercase; color:var(--ink-faint); }
 .portal-foot span b{ color:var(--ink-dim); font-weight:500; }
@@ -66,15 +72,19 @@
 .deriv-l b{ color:var(--ink); font-weight:600; }
 .deriv-acts{ display:flex; flex-wrap:wrap; gap:8px; margin-top:14px; }
 .deriv-acts .tbtn{ text-decoration:none; }
-@media (max-width:980px){
+@container app (max-width:980px){
   .hero{ grid-template-columns:minmax(0, 1fr); padding-right:0; }
   .deriv{ margin:16px 30px 0; }
 }
-@media (max-width:720px){
+@container app (max-width:720px){
   .portal-top{ padding:16px; }
   .portal-lead{ padding:6px 16px 0; }
   .deriv{ margin:16px 16px 0; }
   .deriv-tree{ width:110px; }
   .diptych, .bookcard{ margin-left:16px; margin-right:16px; }
   .portal-foot{ padding:20px 16px 22px; }
+}
+@container app (max-width:480px){
+  .bookcard{ flex-direction:column; align-items:flex-start; gap:10px; }
+  .bk-title span{ display:block; margin:2px 0 0; }
 }

@@ -96,3 +96,9 @@ h1,h2,h3{ text-wrap:balance; }
 
 /* janela de PDF encaixada: o conteúdo em fluxo normal cede a faixa dela */
 .app-shell{ padding-left:var(--dock-l, 0px); padding-right:var(--dock-r, 0px); }
+/*
+ * As páginas quebram o layout pela largura que sobra para elas (@container app),
+ * não pela largura da tela (@media): com o PDF encaixado, uma tela de 1280px
+ * deixa ~650px para a página, e ela tem de se comportar como num tablet.
+ */
+.app-shell{ container:app / inline-size; }

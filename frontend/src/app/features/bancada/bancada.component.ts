@@ -5,6 +5,7 @@ import { Router } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { AutomataService } from '../../core/services/automata.service';
 import { EditorStateService } from '../../core/services/editor-state.service';
+import { PdfWindowService } from '../../core/services/pdf-window.service';
 import { ThemeService } from '../../core/services/theme.service';
 import {
   AutomatonKind, AutomatonModel, Comparison, Determinization, SavedAutomaton,
@@ -132,11 +133,14 @@ export class BancadaComponent implements OnInit {
     private editor: EditorStateService,
     public theme: ThemeService,
     private router: Router,
+    private pdfWin: PdfWindowService,
   ) {}
 
   ngOnInit(): void {
-    // no celular, começa com o painel recolhido e a rail visível (só ícones)
-    const narrow = typeof window !== 'undefined' && window.innerWidth <= 820;
+    // no celular (ou com o PDF encaixado tomando a tela), começa com o painel
+    // recolhido e a rail visível (só ícones); mesmo corte do @container no CSS
+    const { left, right } = this.pdfWin.inset();
+    const narrow = typeof window !== 'undefined' && window.innerWidth - left - right <= 820;
     this.panelOpen = !narrow;
     this.space = this.editor.space;
     this.load();

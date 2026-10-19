@@ -27,9 +27,12 @@ h2{ margin:6px 0 0; font-size:18px; font-weight:600; line-height:1.25; color:var
 .sol a{ color:var(--accent); }
 .sol a:hover{ text-decoration:underline; }
 
-@media (max-width:560px){
+@container app (max-width:560px){
   .card{ flex-direction:column; gap:12px; }
   .tbtn .lbl{ display:none; }
   .tbtn .sm{ display:inline; }
   .acts .tbtn{ flex:1; justify-content:center; }
+}
+@media (pointer:coarse){
+  .sol a{ display:inline-flex; align-items:center; min-height:36px; }
 }
