@@ -5,7 +5,8 @@ a{ color:inherit; }
 .win[data-mode="float"]{ border-radius:12px; min-width:280px; min-height:44px; }
 .win[data-mode="left"]{ top:0; bottom:0; left:0; border-width:0 1px 0 0; }
 .win[data-mode="right"]{ top:0; bottom:0; right:0; border-width:0 0 0 1px; }
-.win[data-mode="sheet"]{ left:0; right:0; bottom:0; height:min(68vh, 640px); border-radius:14px 14px 0 0; border-width:1px 0 0; }
+/* folha do celular: sobe até logo abaixo da barra da página (56px), deixando-a visível */
+.win[data-mode="sheet"]{ left:0; right:0; bottom:0; height:calc(100vh - 60px); height:calc(100dvh - 60px); border-radius:14px 14px 0 0; border-width:1px 0 0; }
 .win.busy{ user-select:none; -webkit-user-select:none; }
 .win.busy .scroller{ pointer-events:none; }
 
