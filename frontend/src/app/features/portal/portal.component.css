@@ -32,6 +32,12 @@
 .choice:hover .go svg{ transform:translateX(4px); }
 .diagram-mini{ position:absolute; right:22px; top:22px; color:var(--ink-faint); opacity:.7; }
 .choice:hover .diagram-mini{ color:var(--sp); opacity:1; }
+/* card estreito (celular, tela dividida com o PDF): o desenho sai do canto, onde
+   cobriria rótulo e título, e entra no fluxo acima do rótulo */
+.choice{ container:choice / inline-size; }
+@container choice (max-width:480px){
+  .diagram-mini{ position:static; flex:none; margin:0 0 14px; }
+}
 
 .bookcard{ display:flex; align-items:center; gap:18px; margin:16px 30px 0; padding:18px 22px; background:var(--surface); border:1px solid var(--line); border-radius:12px; color:var(--ink); text-decoration:none; transition:border-color .2s, transform .12s; }
 .bookcard:hover{ border-color:var(--ink-dim); transform:translateY(-2px); }
@@ -79,8 +85,6 @@
   .portal-foot{ padding:20px 16px 22px; }
 }
 @container app (max-width:480px){
-  /* sem espaço para o desenho ao lado do rótulo: ele é só decorativo */
-  .diagram-mini{ display:none; }
   .bookcard{ flex-direction:column; align-items:flex-start; gap:10px; }
   .bk-title span{ display:block; margin:2px 0 0; }
 }
