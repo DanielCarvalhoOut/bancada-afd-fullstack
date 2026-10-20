@@ -20,8 +20,8 @@ export const ATIVIDADES: Atividade[] = [
     subject: 'Gramáticas · Gramáticas Regulares',
     description: 'Derivação, palavras geradas e não geradas, sentença × forma sentencial, linguagem gerada e conversões entre gramática regular e autômato finito.',
     pages: 2,
-    size: '89 KB',
-    topics: ['derivação ⇒ / ⇒*', 'árvore', 'GR → AFN', 'AFD → GR', 'DTE'],
+    size: '95 KB',
+    topics: ['derivação ⇒ / ⇒*', 'árvore', 'GR → AFN', 'AFN → GR', 'DTE'],
     solutions: [
       { label: 'Gramáticas Q1–Q5', section: 'ex-gram-q1' },
       { label: 'Regulares Q1–Q5', section: 'ex-gr-q1' },

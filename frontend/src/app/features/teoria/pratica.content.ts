@@ -25,11 +25,11 @@ const F_GR_Q2_AFN = aut('afn',
   [['R', 100, 130, 'i'], ['S', 270, 130], ['T', 440, 130], ['X', 610, 130], ['F', 780, 130, 'f']],
   [['R', 'R', 'a,b'], ['R', 'S', 'a'], ['S', 'T', 'a'], ['T', 'X', 'a,b'], ['X', 'F', 'a,b']], ['a', 'b']);
 
-// Gramáticas regulares, questão 3: os quatro AFDs do enunciado (convenção do PDF)
-const F_GR_Q3A = aut('afd', [['A', 100, 120, 'if'], ['B', 300, 120]], [['A', 'B', 'a'], ['B', 'A', 'a']], ['a']);
-const F_GR_Q3B = aut('afd', [['A', 100, 120, 'i'], ['B', 300, 120, 'f']], [['A', 'A', 'a'], ['A', 'B', 'b'], ['B', 'B', 'a,b']], ['a', 'b']);
-const F_GR_Q3C = aut('afd', [['A', 100, 120, 'i'], ['B', 280, 120], ['C', 460, 120, 'f']], [['A', 'B', 'a'], ['B', 'B', 'a'], ['B', 'C', 'b']], ['a', 'b']);
-const F_GR_Q3D = aut('afd', [['A', 110, 120, 'if']], [['A', 'A', 'a']], ['a']);
+// Gramáticas regulares, questão 3: os quatro autômatos do enunciado (convenção do PDF)
+const F_GR_Q3A = aut('afn', [['A', 100, 120, 'if'], ['B', 300, 120]], [['A', 'B', 'a'], ['B', 'A', 'a']], ['a']);
+const F_GR_Q3B = aut('afn', [['A', 100, 120, 'i'], ['B', 300, 120, 'f']], [['A', 'A', 'a'], ['A', 'B', 'b'], ['B', 'B', 'a,b']], ['a', 'b']);
+const F_GR_Q3C = aut('afn', [['A', 100, 120, 'i'], ['B', 280, 120], ['C', 460, 120, 'f']], [['A', 'B', 'a'], ['B', 'B', 'a'], ['B', 'C', 'b']], ['a', 'b']);
+const F_GR_Q3D = aut('afn', [['A', 110, 120, 'if']], [['A', 'A', 'a']], ['a']);
 
 // Gramáticas regulares, questão 4: sem 1’s consecutivos, w ∈ (0,1)⁺
 const F_GR_Q4 = aut('afn',
@@ -342,9 +342,9 @@ export const EXERCICIOS: Chapter[] = [
         title: 'Questão 1 — AFN da gramática',
         theory: ['gr-gr-para-af', 'gr-finais'],
         blocks: [
-          { t: 'note', kind: 'q', html: 'Obtenha o AFD da gramática G = ({S, B}, {0, 1}, P, S).' },
+          { t: 'note', kind: 'q', html: 'Obtenha o AFN da gramática G = ({S, B}, {0, 1}, P, S).' },
           { t: 'code', text: 'S → 0S | 1B\nB → 0S | 1B | ε' },
-          ex({ id: 'gr-1', label: '1', prompt: 'Escreva o AFN da <b>tradução direta</b> da gramática (é o que a disciplina pede, mesmo o enunciado dizendo AFD): uma transição por linha (<code>origem símbolo destino</code>), mais as linhas <code>inicial:</code> e <code>finais:</code>.', check: { kind: 'automaton', ref: F_GR_Q1, deterministic: false, exact: true },
+          ex({ id: 'gr-1', label: '1', prompt: 'Escreva o AFN da <b>tradução direta</b> da gramática: uma transição por linha (<code>origem símbolo destino</code>), mais as linhas <code>inicial:</code> e <code>finais:</code>.', check: { kind: 'automaton', ref: F_GR_Q1, deterministic: false, exact: true },
             answer: 'inicial: S\nfinais: B\nS 0 S\nS 1 B\nB 0 S\nB 1 B', explain: 'A correção exige a tradução direta: um estado por não terminal, uma transição por regra A → xB e B final (por B → ε). Os nomes dos estados podem ser outros.' }),
           { t: 'sol', blocks: [
           { t: 'table', head: ['Regra', 'No AFN'], rows: [
@@ -375,9 +375,9 @@ export const EXERCICIOS: Chapter[] = [
         title: 'Questão 2 — DTE do AFN equivalente',
         theory: ['gr-gr-para-af'],
         blocks: [
-          { t: 'note', kind: 'q', html: 'Dada a gramática G = ({R, S, T, X}, {a, b}, P, R), forneça o DTE (diagrama de transição de estados) do AFD equivalente.' },
+          { t: 'note', kind: 'q', html: 'Dada a gramática G = ({R, S, T, X}, {a, b}, P, R), forneça o DTE (diagrama de transição de estados) do AFN equivalente.' },
           { t: 'code', text: 'R → aS | aR | bR\nS → aT\nT → aX | bX\nX → a | b' },
-          ex({ id: 'gr-2', label: '2', prompt: 'Escreva o AFN da <b>tradução direta</b> da gramática (é o que a disciplina pede, mesmo o enunciado dizendo AFD): uma transição por linha (<code>origem símbolo destino</code>), mais as linhas <code>inicial:</code> e <code>finais:</code>.', check: { kind: 'automaton', ref: F_GR_Q2_AFN, deterministic: false, exact: true },
+          ex({ id: 'gr-2', label: '2', prompt: 'Escreva o AFN da <b>tradução direta</b> da gramática: uma transição por linha (<code>origem símbolo destino</code>), mais as linhas <code>inicial:</code> e <code>finais:</code>.', check: { kind: 'automaton', ref: F_GR_Q2_AFN, deterministic: false, exact: true },
             answer: 'inicial: R\nfinais: F\nR a R\nR b R\nR a S\nS a T\nT a X\nT b X\nX a F\nX b F',
             explain: 'A correção exige a tradução direta: R, S, T, X e o final novo F (pelas regras X → a | b). O AFD da construção de subconjuntos não é aceito, porque a disciplina pede o AFN. Os nomes dos estados podem ser outros.' }),
           { t: 'sol', blocks: [
@@ -391,22 +391,22 @@ export const EXERCICIOS: Chapter[] = [
       },
       {
         id: 'ex-gr-q3',
-        title: 'Questão 3 — gramática equivalente aos AFDs',
+        title: 'Questão 3 — gramática equivalente aos AFNs',
         theory: ['gr-af-para-gr'],
         blocks: [
-          { t: 'note', kind: 'q', html: 'Defina a gramática equivalente aos seguintes AFDs. Convenção: seta solta = estado inicial; círculo duplo = estado de aceitação.' },
+          { t: 'note', kind: 'q', html: 'Defina a gramática equivalente aos seguintes AFNs. Convenção: seta solta = estado inicial; círculo duplo = estado de aceitação.' },
           { t: 'note', kind: 'tip', title: 'Dicionário AF → GR', html: 'Cada estado vira um não terminal; o inicial é o símbolo de partida. Cada transição <b>A —x→ B</b> vira a regra <b>A → xB</b>. Cada estado <b>final</b> ganha <b>A → ε</b>.' },
           { t: 'fig', model: F_GR_Q3A, caption: '(a) Σ = {a}: aceita as palavras de tamanho par, inclusive ε.', re: '^(aa)*$' },
-          ex({ id: 'gr-3a', label: '3a', prompt: 'Gramática equivalente ao AFD (a).', check: { kind: 'build', alphabet: ['a'], lang: (w) => /^(aa)*$/.test(w), maxLen: 10 },
+          ex({ id: 'gr-3a', label: '3a', prompt: 'Gramática equivalente ao AFN (a).', check: { kind: 'build', alphabet: ['a'], lang: (w) => /^(aa)*$/.test(w), maxLen: 10 },
             answer: 'A → aB | ε\nB → aA', explain: 'A é inicial <b>e</b> final, então ganha A → ε (é isso que faz ε ∈ L). B não é final: não tem regra ε.' }),
           { t: 'fig', model: F_GR_Q3B, caption: '(b) a* b (a | b)*: tem pelo menos um b.', re: '^a*b[ab]*$' },
-          ex({ id: 'gr-3b', label: '3b', prompt: 'Gramática equivalente ao AFD (b).', check: { kind: 'build', alphabet: ['a', 'b'], lang: (w) => /^a*b[ab]*$/.test(w), maxLen: 7 },
+          ex({ id: 'gr-3b', label: '3b', prompt: 'Gramática equivalente ao AFN (b).', check: { kind: 'build', alphabet: ['a', 'b'], lang: (w) => /^a*b[ab]*$/.test(w), maxLen: 7 },
             answer: 'A → aA | bB\nB → aB | bB | ε', explain: 'O laço a,b em B vira duas regras: B → aB | bB.' }),
           { t: 'fig', model: F_GR_Q3C, caption: '(c) a⁺ b: um ou mais a, depois exatamente um b.', re: '^aa*b$' },
-          ex({ id: 'gr-3c', label: '3c', prompt: 'Gramática equivalente ao AFD (c).', check: { kind: 'build', alphabet: ['a', 'b'], lang: (w) => /^a+b$/.test(w), maxLen: 7 },
+          ex({ id: 'gr-3c', label: '3c', prompt: 'Gramática equivalente ao AFN (c).', check: { kind: 'build', alphabet: ['a', 'b'], lang: (w) => /^a+b$/.test(w), maxLen: 7 },
             answer: 'A → aB\nB → aB | bC\nC → ε', explain: 'Também vale juntar o último passo: <b>B → aB | b</b> (sem C), porque C só serve para terminar.' }),
           { t: 'fig', model: F_GR_Q3D, caption: '(d) Σ = {a}: a* (inclusive ε).', re: '^a*$' },
-          ex({ id: 'gr-3d', label: '3d', prompt: 'Gramática equivalente ao AFD (d).', check: { kind: 'build', alphabet: ['a'], lang: (w) => /^a*$/.test(w), maxLen: 10 },
+          ex({ id: 'gr-3d', label: '3d', prompt: 'Gramática equivalente ao AFN (d).', check: { kind: 'build', alphabet: ['a'], lang: (w) => /^a*$/.test(w), maxLen: 10 },
             answer: 'A → aA | ε', explain: 'Um único estado, inicial e final, com laço em a.' }),
         ],
       },
