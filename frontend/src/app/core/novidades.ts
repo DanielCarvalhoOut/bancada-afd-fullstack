@@ -12,13 +12,13 @@ export interface Novidade {
 }
 
 export const NOVIDADES = {
-  versao: '2026-10-20',
+  versao: '2026-10-20.2',
   quando: 'Outubro de 2026',
   mudou: [
     {
       icone: 'exercicios',
       titulo: 'Exercícios têm página própria',
-      texto: 'Saíram da Teoria: uma aba por lista, na ordem do PDF. Links antigos continuam valendo.',
+      texto: 'Eram “Exercícios resolvidos”, dentro da Teoria. Agora uma aba por lista, na ordem do PDF.',
       link: { path: '/exercicios', label: 'Abrir' },
     },
     {
