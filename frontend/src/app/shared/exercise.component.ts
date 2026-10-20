@@ -64,7 +64,7 @@ export class ExerciseComponent {
   readonly kindLabel = computed(() => {
     const c = this.ex().check;
     if (c.kind === 'derivation') return c.order === 'left' ? 'derivação mais à esquerda' : c.order === 'right' ? 'derivação mais à direita' : 'derivação';
-    if (c.kind === 'automaton') return c.deterministic ? 'construir AFD' : 'construir AF';
+    if (c.kind === 'automaton') return c.exact ? 'construir AFN' : c.deterministic ? 'construir AFD' : 'construir AF';
     return KIND_LABEL[c.kind];
   });
   readonly grammar = computed(() => {

@@ -37,7 +37,7 @@ export const PRESET_GROUPS: PresetGroup[] = [
       { id: 'lista-q5', label: 'Q5 · expressões ((id + id) / id)', grammar: 'EXPR → EXPR OP EXPR | (EXPR) | EXPR | id\nOP → + | - | * | /', word: '(id + id) / id', section: 'ex-gram-q5',
         note: 'Escrita com espaços: “id” é um terminal só. Ambígua e com a regra inútil EXPR → EXPR.' },
       { id: 'gr-q1', label: 'Regulares Q1 · termina em 1 (0101)', grammar: 'S → 0S | 1B\nB → 0S | 1B | ε', word: '0101', section: 'ex-gr-q1',
-        note: 'Gramática regular: a derivação é a própria simulação do AFD.' },
+        note: 'Gramática regular: a derivação é a própria simulação do autômato.' },
       { id: 'gr-q2', label: 'Regulares Q2 · R → aS | aR | bR (baaab)', grammar: 'R → aS | aR | bR\nS → aT\nT → aX | bX\nX → a | b', word: 'baaab', section: 'ex-gr-q2',
         note: 'R lendo a vai para dois lugares (R → aS | aR): o AF direto é um AFN.' },
       { id: 'gr-q5a', label: 'Regulares Q5a (abb)', grammar: 'S → aA | bB | ε\nA → aA | bB\nB → bB | b', word: 'abb', section: 'ex-gr-q5',
@@ -70,7 +70,7 @@ export const PRESET_GROUPS: PresetGroup[] = [
     items: [
       { id: 'quadro-aASb', label: 'S → ab | aASb (ababbabb)', grammar: 'S → ab | aASb\nA → bSb | ε', word: 'ababbabb', note: 'Exemplo de derivação mais à esquerda feito em aula.' },
       { id: 'ambigua', label: 'Ambígua · E → E + E | E * E', grammar: 'E → E + E | E * E | id', word: 'id + id * id', note: 'Duas árvores diferentes para a mesma palavra: tente montar as duas.' },
-      { id: '0n1n', label: '0ⁿ1ⁿ (livre de contexto)', grammar: 'S → 0S1 | 01', word: '000111', note: 'Não é regular: nenhum AFD reconhece.' },
+      { id: '0n1n', label: '0ⁿ1ⁿ (livre de contexto)', grammar: 'S → 0S1 | 01', word: '000111', note: 'Não é regular: nenhum autômato finito reconhece.' },
     ],
   },
 ];
