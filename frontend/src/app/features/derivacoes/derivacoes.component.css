@@ -83,7 +83,7 @@ button[disabled]{ opacity:.45; pointer-events:none; }
   .rules{ display:none; } /* repete o textarea; no celular só ocupa espaço */
 }
 @container app (max-width:560px){
-  .where, .tbtn .lbl{ display:none; }
+  .where{ display:none; }
   .wrow{ flex-direction:column; }
   .report li{ grid-template-columns:18px minmax(0, 1fr); }
   .report .why{ grid-column:2; }

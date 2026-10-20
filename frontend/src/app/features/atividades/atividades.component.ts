@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { SiteNavComponent } from '../../shared/site-nav.component';
 import { ATIVIDADES, Atividade } from '../../core/atividades';
 import { DockMode, PdfWindowService } from '../../core/services/pdf-window.service';
 import { ThemeService } from '../../core/services/theme.service';
@@ -8,7 +9,7 @@ import { ThemeService } from '../../core/services/theme.service';
 @Component({
   selector: 'app-atividades',
   standalone: true,
-  imports: [RouterLink],
+  imports: [RouterLink, SiteNavComponent],
   templateUrl: './atividades.component.html',
   styleUrl: './atividades.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,

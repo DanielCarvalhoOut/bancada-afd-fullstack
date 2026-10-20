@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, ElementRef, HostListener, OnInit, ViewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
+import { SiteNavComponent } from '../../shared/site-nav.component';
 import { firstValueFrom } from 'rxjs';
 import { AutomataService } from '../../core/services/automata.service';
 import { EditorStateService } from '../../core/services/editor-state.service';
@@ -76,7 +77,7 @@ function emptyPair(): Record<AutomatonKind, AutomatonModel> {
 @Component({
   selector: 'app-bancada',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, SiteNavComponent],
   templateUrl: './bancada.component.html',
   styleUrl: './bancada.component.css',
 })
@@ -646,8 +647,6 @@ export class BancadaComponent implements OnInit {
 
   // ---------- navegação ----------
   toPortal(): void { this.router.navigate(['/']); }
-  toTeoria(): void { this.router.navigate(['/teoria']); }
-  toPage(path: '/derivacoes' | '/atividades'): void { this.router.navigate([path]); }
 
   private seedIfEmpty(): void {
     if (this.model.states.length) return;

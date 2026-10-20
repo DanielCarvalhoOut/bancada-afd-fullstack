@@ -10,10 +10,7 @@
     <div class="brand mono">{{ part().short.toLowerCase() }}</div>
     <div class="where mono">{{ current().num }} · {{ current().section.title }}</div>
     <div class="spacer"></div>
-    <a class="tbtn" routerLink="/bancada" title="Ir para a bancada">
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="7" cy="12" r="4"></circle><circle cx="7" cy="12" r="1.6"></circle><path d="M12 12h9"></path><path d="M18 9l3 3-3 3"></path></svg>
-      <span class="lbl">Bancada</span>
-    </a>
+    <app-site-nav />
     <button class="iconbtn" (click)="theme.toggle()" title="Alternar tema" aria-label="Alternar tema">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8z"></path></svg>
     </button>

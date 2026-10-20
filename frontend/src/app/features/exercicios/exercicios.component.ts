@@ -7,6 +7,7 @@ import { ATIVIDADES } from '../../core/atividades';
 import { PdfWindowService } from '../../core/services/pdf-window.service';
 import { ThemeService } from '../../core/services/theme.service';
 import { BlocksComponent } from '../../shared/blocks.component';
+import { SiteNavComponent } from '../../shared/site-nav.component';
 import { TheoryLink } from '../../shared/exercise.component';
 import { EXERCICIOS } from '../teoria/pratica.content';
 import { CHAPTERS, Chapter, Section } from '../teoria/teoria.content';
@@ -56,7 +57,7 @@ const QUESTIONS = new Map<Chapter, Question[]>(EXERCICIOS.map((c) => [c, c.secti
 @Component({
   selector: 'app-exercicios',
   standalone: true,
-  imports: [RouterLink, BlocksComponent],
+  imports: [RouterLink, BlocksComponent, SiteNavComponent],
   templateUrl: './exercicios.component.html',
   styleUrl: './exercicios.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,

@@ -5,6 +5,7 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { map } from 'rxjs';
 import { ThemeService } from '../../core/services/theme.service';
 import { BlocksComponent } from '../../shared/blocks.component';
+import { SiteNavComponent } from '../../shared/site-nav.component';
 import { Block, CHAPTERS, Chapter, Section } from './teoria.content';
 
 /** Parte do livro. Os exercícios resolvidos ganharam página própria (/exercicios); fica só a teoria. */
@@ -82,7 +83,7 @@ const PART_TOTAL = new Map(PARTS.map((p) => [p.id, ENTRIES.filter((e) => e.part 
 @Component({
   selector: 'app-teoria',
   standalone: true,
-  imports: [RouterLink, BlocksComponent],
+  imports: [RouterLink, BlocksComponent, SiteNavComponent],
   templateUrl: './teoria.component.html',
   styleUrl: './teoria.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
