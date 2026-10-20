@@ -34,7 +34,8 @@
       </div>
 
       <label class="lab mono" for="dv-gram">Regras (uma por linha)</label>
-      <textarea id="dv-gram" class="inp code" rows="6" spellcheck="false" maxlength="4000" autocomplete="off"
+      <app-sym-bar [target]="taGram" [syms]="[{ s: 'ε', label: 'vazio' }, { s: '→' }]" />
+      <textarea #taGram id="dv-gram" class="inp code" rows="6" spellcheck="false" maxlength="4000" autocomplete="off"
                 [value]="grammarText()" (input)="editGrammar($any($event.target).value)"></textarea>
       <p class="hint">Use <code>→</code> ou <code>-&gt;</code>, <code>|</code> entre alternativas e <code>ε</code> (ou <code>eps</code>) para vazio. A partida é o lado esquerdo da 1ª regra. Com espaços entre símbolos, <code>id</code> vira um terminal só.</p>
 
@@ -96,7 +97,8 @@
             <button class="mini" (click)="restartSteps()">Recomeçar</button>
           </div>
           <label class="lab mono" for="dv-steps">Uma forma sentencial por linha (ou separadas por ⇒)</label>
-          <textarea id="dv-steps" class="inp code" rows="7" spellcheck="false" maxlength="6000" autocomplete="off"
+          <app-sym-bar [target]="taSteps" [syms]="[{ s: 'ε', label: 'vazio' }]" [typed]="['eps']" />
+          <textarea #taSteps id="dv-steps" class="inp code" rows="7" spellcheck="false" maxlength="6000" autocomplete="off"
                     [value]="stepsText()" (input)="editSteps($any($event.target).value)"></textarea>
 
           @if (lastForm(); as f) {
@@ -160,7 +162,8 @@
             <button class="mini" (click)="restartTree()">Recomeçar</button>
           </div>
           <label class="lab mono" for="dv-tree">Notação: nó[filhos]. Ex.: R[S[a T[ε] b]]</label>
-          <textarea id="dv-tree" class="inp code" rows="3" spellcheck="false" maxlength="4000" autocomplete="off"
+          <app-sym-bar [target]="taTree" [syms]="[{ s: 'ε', label: 'vazio' }]" [typed]="['eps']" />
+          <textarea #taTree id="dv-tree" class="inp code" rows="3" spellcheck="false" maxlength="4000" autocomplete="off"
                     [value]="treeText()" (input)="editTree($any($event.target).value)"></textarea>
           @if (treeParse().error; as e) { <div class="msg err">{{ e }}</div> }
 
