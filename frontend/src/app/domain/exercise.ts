@@ -1,6 +1,7 @@
 import {
   EPS, checkDerivation, checkTree, compareLanguage, parseGrammar, parseTree, showForm, tokenizeForm,
 } from './grammar';
+import { AutomatonModel, determinismIssues, equivalence } from './automaton';
 
 /**
  * Exercícios corrigíveis — tipos e correção, sem Angular.
@@ -19,7 +20,12 @@ export type ExCheck =
   /** Resposta dissertativa: confere se os pontos-chave aparecem (autoavaliação guiada). */
   | { kind: 'concept'; groups: { label: string; terms: string[] }[] }
   /** Construir gramática: L(G) do aluno × linguagem pedida, em todas as palavras até maxLen. */
-  | { kind: 'build'; alphabet: string[]; lang: (w: string) => boolean; maxLen: number };
+  | { kind: 'build'; alphabet: string[]; lang: (w: string) => boolean; maxLen: number }
+  /**
+   * Construir autômato, escrito como texto (ver parseAutomatonText): L(aluno) × L(ref),
+   * decidido de forma exata pelo motor. `deterministic` exige um AFD.
+   */
+  | { kind: 'automaton'; ref: AutomatonModel; deterministic: boolean };
 
 export interface Exercise {
   id: string;          // chave de armazenamento: única e estável
@@ -65,7 +71,105 @@ export function grade(ex: Exercise, answer: string): Feedback {
       return { verdict, title: `Pontos-chave cobertos: ${hit} de ${items.length}. Compare com a resposta-modelo.`, items };
     }
     case 'build': return gradeBuild(c, answer);
+    case 'automaton': return gradeAutomaton(c, answer);
   }
+}
+
+// ───────────────── autômato escrito como texto ─────────────────
+
+/** Limites para a resposta digitada (entrada não confiável). */
+const AUT_LIMITS = { lines: 80, states: 30, transitions: 200, name: 12 };
+const NAME = /^[\p{L}\p{N}_']+$/u;
+
+/**
+ * Lê um autômato digitado, uma informação por linha:
+ *   inicial: S            finais: B, F          (vírgula ou espaço entre nomes)
+ *   S a B                 S a,b B               S -a-> B              δ(S, a) = B
+ * No AFN, δ(S, a) = {A, B} e o símbolo ε (ou "eps") são aceitos. Linhas
+ * vazias e iniciadas por # ou // são ignoradas.
+ */
+export function parseAutomatonText(text: string, alphabet: string[]): { model: AutomatonModel } | { problems: string[] } {
+  const problems: string[] = [];
+  const order: string[] = [];
+  const seen = new Set<string>();
+  const add = (n: string, line: number): boolean => {
+    if (n.length > AUT_LIMITS.name || !NAME.test(n)) { problems.push(`Linha ${line}: “${n}” não é um nome de estado válido (letras, números ou _).`); return false; }
+    if (!seen.has(n)) {
+      if (seen.size >= AUT_LIMITS.states) { problems.push(`Mais de ${AUT_LIMITS.states} estados: simplifique o autômato.`); return false; }
+      seen.add(n); order.push(n);
+    }
+    return true;
+  };
+  const sym = (s: string) => (s === 'eps' || s === 'ε' || s === 'λ' ? EPS : s);
+  let initial: string | null = null;
+  const finals = new Set<string>();
+  const trans: { from: string; to: string; symbols: string[] }[] = [];
+
+  const lines = text.split('\n').slice(0, AUT_LIMITS.lines);
+  lines.forEach((raw, i) => {
+    const n = i + 1;
+    const l = raw.trim();
+    if (!l || l.startsWith('#') || l.startsWith('//')) return;
+    const head = /^(inicial|in[ií]cio|finais|final|aceita[çc][aã]o)\s*[:=]?\s*(.*)$/i.exec(l);
+    if (head) {
+      const names = head[2].replace(/[{}]/g, ' ').split(/[\s,]+/).filter(Boolean);
+      if (/^in/i.test(head[1])) {
+        if (names.length !== 1) { problems.push(`Linha ${n}: indique exatamente um estado inicial.`); return; }
+        if (add(names[0], n)) initial = names[0];
+      } else {
+        for (const f of names) if (add(f, n)) finals.add(f);
+      }
+      return;
+    }
+    // δ(S, a) = B  |  δ(S, a) = {A, B}  |  S -a-> B  |  S --a,b--> B  |  S a B
+    const m = /^[δd]\s*\(\s*(\S+?)\s*,\s*(\S+?)\s*\)\s*=\s*\{?\s*([^}]*?)\s*\}?$/.exec(l)
+      ?? /^(\S+)\s*-+\s*([^\s>-][^>]*?)\s*-+>\s*(\S+)$/.exec(l)
+      ?? /^(\S+)\s+(\S+)\s+(\S+)$/.exec(l);
+    if (!m) { problems.push(`Linha ${n}: escreva “origem símbolo destino” (ex.: S a B).`); return; }
+    const [, from, symsTxt, toTxt] = m;
+    const symbols = symsTxt.split(',').map((s) => sym(s.trim())).filter(Boolean);
+    const bad = symbols.filter((s) => s !== EPS && !alphabet.includes(s));
+    if (bad.length) { problems.push(`Linha ${n}: “${bad.join(', ')}” não está em Σ = {${alphabet.join(', ')}}.`); return; }
+    const tos = toTxt.split(',').map((s) => s.trim()).filter(Boolean);
+    if (!symbols.length || !tos.length) { problems.push(`Linha ${n}: falta o símbolo ou o destino.`); return; }
+    if (!add(from, n) || !tos.every((t) => add(t, n))) return;
+    for (const to of tos) {
+      if (trans.length >= AUT_LIMITS.transitions) { problems.push(`Mais de ${AUT_LIMITS.transitions} transições.`); return; }
+      trans.push({ from, to, symbols });
+    }
+  });
+  if (text.split('\n').length > AUT_LIMITS.lines) problems.push(`Só as primeiras ${AUT_LIMITS.lines} linhas foram lidas.`);
+  if (!initial && !problems.length) problems.push('Falta a linha “inicial: …” com o estado inicial.');
+  if (problems.length) return { problems: [...new Set(problems)].slice(0, 6) };
+  return {
+    model: {
+      kind: 'afn',
+      alphabet: [...alphabet],
+      states: order.map((id) => ({ id, name: id, x: 0, y: 0, initial: id === initial, accepting: finals.has(id) })),
+      transitions: trans,
+    },
+  };
+}
+
+function gradeAutomaton(c: Extract<ExCheck, { kind: 'automaton' }>, answer: string): Feedback {
+  const alphabet = c.ref.alphabet?.length ? c.ref.alphabet : ['0', '1'];
+  const p = parseAutomatonText(answer, alphabet);
+  if ('problems' in p) return { verdict: 'bad', title: 'O autômato não foi lido.', items: p.problems.map((t) => ({ ok: false, text: t })) };
+  const eq = equivalence(p.model, c.ref);
+  if ('error' in eq) return { verdict: 'bad', title: eq.error, items: [] };
+  const items: FeedbackItem[] = [];
+  if (eq.equivalent) items.push({ ok: true, text: 'Aceita exatamente a mesma linguagem da resposta-modelo (conferido em todas as palavras, não só nas curtas).' });
+  else items.push({ ok: false, text: eq.acceptedBy === 'a'
+    ? `Aceita ${showWord(eq.witness)}, que não está na linguagem (é a menor palavra em que difere).`
+    : `Rejeita ${showWord(eq.witness)}, que está na linguagem (é a menor palavra em que difere).` });
+  let det = true;
+  if (c.deterministic) {
+    const errs = determinismIssues({ ...p.model, kind: 'afd' }).filter((i) => i.severity === 'error');
+    det = !errs.length;
+    items.push(det ? { ok: true, text: 'É determinístico: no máximo uma saída por símbolo, sem ε.' } : { ok: false, text: `Não é um AFD: ${errs[0].message}` });
+  }
+  const ok = eq.equivalent && det;
+  return { verdict: ok ? 'ok' : eq.equivalent ? 'partial' : 'bad', title: ok ? 'Correto.' : eq.equivalent ? 'Quase: a linguagem está certa, mas a questão pede um AFD.' : 'Ainda não.', items };
 }
 
 function gradeDerivation(gs: string, ws: string, order: 'left' | 'right' | 'any', answer: string): Feedback {

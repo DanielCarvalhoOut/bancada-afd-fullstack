@@ -1,0 +1,49 @@
+/* Blocos de conteúdo (teoria e exercícios). A tipografia base (serifa, 17px)
+   vem de quem usa o componente; aqui ficam só os blocos. */
+:host{ display:block; }
+.defs{ position:absolute; width:0; height:0; overflow:hidden; }
+
+p, .prose-list{ margin:18px 0 0; }
+/* conteúdo vindo de innerHTML não recebe o atributo de escopo: :where() evita exigir o atributo */
+:host :where(b){ font-weight:600; }
+:host :where(code){ font-family:"IBM Plex Mono",monospace; font-size:.86em; background:var(--surface-2); border:1px solid var(--line-soft); padding:0 4px; border-radius:4px; }
+h2{ font-family:"IBM Plex Sans", system-ui, sans-serif; font-size:19px; font-weight:600; margin:36px 0 0; padding-top:18px; border-top:1px solid var(--line-soft); }
+.prose-list{ padding-left:1.4em; }
+.prose-list li + li{ margin-top:6px; }
+.prose-list li::marker{ color:var(--ink-faint); font-family:"IBM Plex Mono",monospace; font-size:.85em; }
+
+/* tabela */
+.tablewrap{ margin:22px 0 0; overflow-x:auto; border:1px solid var(--line); border-radius:10px; background:var(--surface); }
+table{ width:100%; border-collapse:collapse; font-family:"IBM Plex Sans", system-ui, sans-serif; font-size:14px; line-height:1.5; }
+th{ text-align:left; font-weight:600; font-size:11.5px; letter-spacing:.06em; text-transform:uppercase; color:var(--ink-dim); background:var(--surface-2); }
+th, td{ padding:9px 14px; vertical-align:top; border-bottom:1px solid var(--line-soft); }
+tbody tr:last-child td{ border-bottom:0; }
+td:first-child{ font-family:"IBM Plex Mono",monospace; font-size:13px; white-space:nowrap; }
+
+/* código / derivações */
+.code{ margin:22px 0 0; padding:14px 16px; background:var(--code-bg); border:1px solid var(--line); border-radius:10px; font-size:13.5px; line-height:1.65; overflow-x:auto; white-space:pre; }
+
+/* notas: cor = tipo (definição, dica, cuidado, exemplo, enunciado) */
+.note{ --k:var(--accent); margin:22px 0 0; padding:12px 16px 14px; border:1px solid var(--line); border-left:3px solid var(--k); border-radius:4px 10px 10px 4px; background:var(--surface); }
+.note[data-kind="tip"]{ --k:var(--ok); }
+.note[data-kind="warn"]{ --k:var(--trap); background:var(--trap-fill); }
+.note[data-kind="ex"]{ --k:var(--afn); }
+.note[data-kind="def"]{ --k:var(--afd); }
+.note[data-kind="q"]{ --k:var(--ink-dim); background:var(--surface-2); }
+.note-k{ font-size:10.5px; font-weight:600; letter-spacing:.1em; text-transform:uppercase; color:var(--k); }
+.note-k span{ letter-spacing:.04em; text-transform:none; font-size:12px; color:var(--ink); }
+.note-b{ margin-top:4px; font-size:16px; line-height:1.65; }
+
+/* figura: autômato real, desenhado pelo motor da bancada */
+.fig{ margin:24px 0 0; border:1px solid var(--line); border-radius:12px; overflow:hidden; background:var(--surface); }
+.stage{ background-color:var(--bg); background-image:radial-gradient(var(--grid) 1.2px, transparent 1.2px); background-size:18px 18px; padding:10px; display:flex; justify-content:center; }
+.stage svg{ display:block; max-width:100%; height:auto; }
+figcaption{ display:flex; flex-wrap:wrap; align-items:center; gap:8px 10px; padding:10px 12px; border-top:1px solid var(--line); font-family:"IBM Plex Sans", system-ui, sans-serif; font-size:13.5px; line-height:1.45; }
+.tag{ font-size:10.5px; font-weight:600; letter-spacing:.06em; padding:2px 7px; border-radius:5px; color:var(--afd); background:var(--accent-soft); border:1px solid var(--afd); }
+.fig[data-kind="afn"] .tag{ color:var(--afn); border-color:var(--afn); background:transparent; }
+.cap{ flex:1 1 220px; color:var(--ink-dim); }
+.acts{ display:flex; gap:6px; }
+.mini{ font-size:12px; font-weight:500; padding:5px 10px; border-radius:7px; border:1px solid var(--line); background:var(--surface-2); color:var(--ink); }
+.mini:hover{ border-color:var(--accent); color:var(--accent); }
+:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
+@media (pointer:coarse){ .mini{ min-height:36px; } }

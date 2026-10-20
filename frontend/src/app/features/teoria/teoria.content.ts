@@ -21,7 +21,13 @@ export type Block =
   /** Exercício corrigível (responder, corrigir, ver resposta). */
   | { t: 'ex'; ex: Exercise };
 
-export interface Section { id: string; title: string; blocks: Block[] }
+export interface Section {
+  id: string;
+  title: string;
+  blocks: Block[];
+  /** Exercícios: ids das seções de teoria sobre o assunto (atalho “Dúvida?”). */
+  theory?: string[];
+}
 export interface Chapter { id: string; title: string; summary: string; sections: Section[] }
 
 type S = [name: string, x: number, y: number, flags?: string]; // flags: i = inicial, f = final
@@ -539,6 +545,47 @@ export const CHAPTERS: Chapter[] = [
           { t: 'p', html: 'A <b>árvore de derivação</b> mostra a estrutura: a raiz é S, cada nó interno é um não terminal com seus filhos dados por uma produção, e as folhas, lidas da esquerda para a direita, formam a sentença.' },
           { t: 'note', kind: 'def', title: 'Ambiguidade', html: 'Uma gramática é <b>ambígua</b> se alguma sentença tem <b>duas árvores</b> diferentes (equivalente: duas derivações mais à esquerda diferentes).' },
           { t: 'p', html: 'Exemplo clássico: E → E + E | E * E | id gera id + id * id de dois jeitos, um agrupando (id + id) * id e outro id + (id * id). Para provar que uma palavra é gerada, basta uma árvore; a ambiguidade só importa quando a estrutura (o significado) interessa.' },
+        ],
+      },
+      {
+        id: 'gram-equivalente',
+        title: 'Gramáticas equivalentes',
+        blocks: [
+          { t: 'note', kind: 'def', title: 'Equivalência', html: 'Duas gramáticas G₁ e G₂ são <b>equivalentes</b> quando geram a mesma linguagem: <b>L(G₁) = L(G₂)</b>. As regras, os não terminais e até a quantidade de regras podem ser completamente diferentes.' },
+          { t: 'p', html: 'As duas gramáticas abaixo geram { aⁿbⁿ | n ≥ 1 }: a primeira põe um par a…b de cada vez; a segunda faz o mesmo passando por um não terminal auxiliar.' },
+          { t: 'code', text: 'G₁:  S → aSb | ab\n\nG₂:  S → aA\n     A → Sb | b\n\nG₂: S ⇒ aA ⇒ aSb ⇒ aaAb ⇒ aabb   (a mesma aabb de G₁: S ⇒ aSb ⇒ aabb)' },
+          { t: 'p', html: 'Transformações que preservam a linguagem produzem gramáticas equivalentes: tirar as produções vazias (a versão <b>ε-livre</b>), eliminar regras unitárias (A → B), ou trocar uma gramática ambígua por outra não ambígua da mesma linguagem.' },
+          { t: 'note', kind: 'warn', html: 'Para mostrar que duas gramáticas <b>não</b> são equivalentes basta uma palavra gerada por uma e não pela outra. Já provar a equivalência exige argumentar sobre <b>todas</b> as palavras. Para gramáticas regulares isso é mecânico (converta as duas em AFD e compare); para livres de contexto, em geral, não existe algoritmo que decida.' },
+        ],
+      },
+      {
+        id: 'gram-eps-livre',
+        title: 'GLC ε-livre',
+        blocks: [
+          { t: 'note', kind: 'def', title: 'ε-livre', html: 'Uma GLC é <b>ε-livre</b> quando não tem produções vazias (A → ε). A única exceção permitida é <b>S → ε</b>, quando ε ∈ L(G), e nesse caso o símbolo de partida S <b>não aparece no lado direito</b> de nenhuma regra.' },
+          { t: 'p', html: 'Toda GLC tem uma equivalente ε-livre. O roteiro para obtê-la:' },
+          { t: 'list', ordered: true, items: [
+            'Ache os não terminais <b>anuláveis</b> (que derivam ε): todo A com A → ε, e depois, repetindo, todo A com uma regra cujo lado direito só tem anuláveis.',
+            'Para cada regra, acrescente as versões em que cada anulável do lado direito <b>some ou fica</b> (todas as combinações), sem criar regras vazias novas.',
+            'Apague as regras A → ε.',
+            'Se S era anulável (ε ∈ L), crie uma partida nova S′ → S | ε. Assim S′ nunca aparece do lado direito.',
+          ] },
+          { t: 'h', text: 'Exemplo: S → aSb | SS | ε' },
+          { t: 'code', text: 'Anuláveis: {S}\n\naSb  →  aSb | ab        (S some ou fica)\nSS   →  SS | S          (S → S não muda nada: pode descartar)\n\nε-livre:\nS′ → S | ε\nS  → aSb | ab | SS' },
+          { t: 'p', html: 'A linguagem é a mesma, inclusive ε (agora só por S′ → ε). É a gramática da Questão 2 da lista de GLC.' },
+          { t: 'note', kind: 'tip', html: 'Pegadinha: “não tem ε na gramática” não é o mesmo que “ε ∉ L(G)”. Uma GLC ε-livre <b>pode</b> gerar ε, desde que só pela regra S → ε do símbolo de partida.' },
+        ],
+      },
+      {
+        id: 'gram-inerente',
+        title: 'Linguagem inerentemente ambígua',
+        blocks: [
+          { t: 'note', kind: 'def', title: 'Inerentemente ambígua', html: 'Uma linguagem livre de contexto é <b>inerentemente ambígua</b> quando <b>toda</b> gramática que a gera é ambígua: não existe nenhuma GLC não ambígua para ela.' },
+          { t: 'p', html: '<b>Ambiguidade é da gramática</b>; <b>ambiguidade inerente é da linguagem</b>. A gramática E → E + E | E * E | ( E ) | id é ambígua, mas a linguagem das expressões <b>não</b> é inerentemente ambígua: a gramática com E, T e F (Questão 3 da lista de GLC) gera o mesmo tipo de expressão sem ambiguidade, porque a precedência está nas próprias regras.' },
+          { t: 'h', text: 'Exemplo clássico' },
+          { t: 'code', text: 'L = { aⁱ bʲ cᵏ | i = j  ou  j = k }      (i, j, k ≥ 0)\n\nS → XC | AY\nX → aXb | ε        (a’s e b’s em mesma quantidade)\nC → cC | ε\nA → aA | ε\nY → bYc | ε        (b’s e c’s em mesma quantidade)' },
+          { t: 'p', html: 'Palavras como <b>abc</b> ou <b>aabbcc</b> (i = j = k) satisfazem as duas condições e têm duas árvores: uma por S → XC, outra por S → AY. Prova-se que <b>qualquer</b> gramática para L tem esse problema em infinitas palavras aⁿbⁿcⁿ, então L é inerentemente ambígua.' },
+          { t: 'note', kind: 'warn', html: 'Linguagens regulares nunca são inerentemente ambíguas: a gramática tirada de um AFD tem uma única derivação por palavra. Também não existe algoritmo que decida, em geral, se uma GLC é ambígua.' },
         ],
       },
       {

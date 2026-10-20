@@ -36,7 +36,7 @@
       </select>
       @if (preset(); as p) { <p class="hint">{{ p.note }}</p> }
       <div class="links">
-        @if (preset()?.section; as sec) { <a class="mini" [routerLink]="['/teoria', sec]">Ver exercício ↗</a> }
+        @if (preset()?.section; as sec) { <a class="mini" [routerLink]="['/exercicios', sec]">Ver exercício ↗</a> }
         @if (atividade()) { <button type="button" class="mini" (click)="openPdf()">Abrir PDF da lista</button> }
       </div>
 

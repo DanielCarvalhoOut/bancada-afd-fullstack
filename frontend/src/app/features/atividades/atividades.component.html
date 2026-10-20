@@ -37,7 +37,7 @@
             @if (a.solutions.length) {
               <div class="sol">
                 <span class="mono">Resolução comentada:</span>
-                @for (s of a.solutions; track s.section) { <a [routerLink]="['/teoria', s.section]">{{ s.label }}</a> }
+                @for (s of a.solutions; track s.section) { <a [routerLink]="['/exercicios', s.section]">{{ s.label }}</a> }
               </div>
             }
           </div>

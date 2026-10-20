@@ -1,0 +1,71 @@
+<div class="page">
+  <header class="topbar">
+    <a class="iconbtn" routerLink="/" title="Voltar ao portal" aria-label="Voltar ao portal">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"></rect><rect x="14" y="3" width="7" height="7" rx="1"></rect><rect x="3" y="14" width="7" height="7" rx="1"></rect><rect x="14" y="14" width="7" height="7" rx="1"></rect></svg>
+    </a>
+    <div class="brand mono">exercícios</div>
+    <div class="spacer"></div>
+    <a class="tbtn" routerLink="/teoria" title="Teoria">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 4h6a4 4 0 0 1 4 4v13a3 3 0 0 0-3-3H2z"></path><path d="M22 4h-6a4 4 0 0 0-4 4v13a3 3 0 0 1 3-3h7z"></path></svg>
+      <span class="lbl">Teoria</span>
+    </a>
+    <a class="tbtn" routerLink="/derivacoes" title="Derivações e árvores">
+      <span aria-hidden="true">⇒</span><span class="lbl">Derivações</span>
+    </a>
+    <a class="tbtn" routerLink="/atividades" title="Listas em PDF">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"></path><path d="M14 3v5h5"></path><path d="M9 13h6M9 17h4"></path></svg>
+      <span class="lbl">Atividades</span>
+    </a>
+    <button class="iconbtn" (click)="theme.toggle()" title="Alternar tema" aria-label="Alternar tema">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8z"></path></svg>
+    </button>
+  </header>
+
+  <main class="wrap">
+    <div class="eyebrow mono">Listas resolvidas e comentadas</div>
+    <h1>Exercícios resolvidos</h1>
+
+    <!-- uma aba por lista -->
+    <nav class="lists" aria-label="Listas">
+      @for (l of lists; track l.id; let i = $index) {
+        <a [routerLink]="['/exercicios', l.id]" [class.on]="l === list()" [attr.aria-current]="l === list() ? 'page' : null">
+          <span>{{ l.title }}</span>
+          <small class="mono">E{{ i + 1 }} · {{ count(l) }} {{ count(l) === 1 ? 'questão' : 'questões' }}</small>
+        </a>
+      }
+    </nav>
+
+    <div class="listhead">
+      <div class="lh-txt">
+        <h2>Lista — {{ list().title }}</h2>
+        <p>{{ list().summary }}</p>
+      </div>
+      @if (pdfDoc()) { <button type="button" class="tbtn" (click)="openPdf()">Abrir PDF da lista</button> }
+    </div>
+
+    <nav class="jump" aria-label="Ir para a questão">
+      @for (q of questions(); track q.section.id) {
+        <button type="button" (click)="go(q)" [title]="'Questão ' + q.num + ' — ' + q.title">{{ q.num }}</button>
+      }
+    </nav>
+
+    @for (q of questions(); track q.section.id) {
+      <section class="q" [id]="q.section.id" [attr.aria-labelledby]="q.section.id + '-t'">
+        <header class="qh">
+          <span class="qn mono">Q{{ q.num }}</span>
+          <h3 [id]="q.section.id + '-t'">{{ q.title }}</h3>
+          @for (k of q.kinds; track k) { <span class="kind mono">{{ k }}</span> }
+        </header>
+        <!-- sem exercício corrigível, o atalho para a teoria fica no cabeçalho -->
+        @if (!q.hasEx && q.theory.length) {
+          <div class="teos">
+            @for (t of q.theory; track t.id) {
+              <a class="teo" [routerLink]="['/teoria', t.id]"><span aria-hidden="true">📖</span> Dúvida? <b>{{ t.title }}</b> ↗</a>
+            }
+          </div>
+        }
+        <app-blocks class="body" [blocks]="q.section.blocks" [theory]="q.theory" />
+      </section>
+    }
+  </main>
+</div>

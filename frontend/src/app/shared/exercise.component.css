@@ -34,6 +34,9 @@
 .acts{ display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin-top:12px; }
 .mini{ font-size:12px; padding:5px 10px; border-radius:7px; border:1px solid var(--line); background:var(--surface-2); color:var(--ink); }
 .mini:hover{ border-color:var(--accent); color:var(--accent); }
+/* atalho para a teoria do assunto */
+.teo{ display:inline-flex; align-items:center; gap:5px; text-decoration:none; border-color:var(--afd); color:var(--afd); background:var(--accent-soft); }
+.teo b{ font-weight:600; }
 
 .fb{ --k:var(--line); margin-top:12px; padding:10px 12px; border-radius:8px; border:1px solid var(--line); border-left:3px solid var(--k); background:var(--bg-2); font-size:13.5px; line-height:1.5; }
 .fb[data-v="ok"]{ --k:var(--ok); }
@@ -51,3 +54,10 @@
 .code{ margin:6px 0 0; padding:10px 12px; background:var(--code-bg); border-radius:8px; font-size:13px; line-height:1.6; overflow-x:auto; white-space:pre; }
 .exp{ margin-top:8px; font-size:14px; line-height:1.6; color:var(--ink-dim); }
 .exp :where(b){ color:var(--ink); }
+
+/* toque: botões com altura de dedo (no mouse fica como está) */
+@media (pointer:coarse){
+  .mini, .tbtn{ min-height:36px; }
+  .tok.nt{ min-width:36px; min-height:36px; }
+  .ch{ min-height:40px; }
+}

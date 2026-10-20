@@ -1,0 +1,58 @@
+:host{ display:block; min-height:100vh; background:var(--bg); --serif:"IBM Plex Serif", Georgia, "Times New Roman", serif; }
+a{ text-decoration:none; color:inherit; }
+.topbar{ position:sticky; top:0; z-index:30; height:56px; display:flex; align-items:center; gap:8px; padding:0 14px; background:var(--bg); border-bottom:1px solid var(--line); }
+.brand{ min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:13px; font-weight:600; letter-spacing:.06em; padding:0 6px; }
+/* botões não encolhem: no estreito quem cede espaço é o nome */
+.topbar .iconbtn, .topbar .tbtn{ flex:none; }
+.spacer{ flex:1; }
+
+.wrap{ max-width:820px; margin:0 auto; padding:24px clamp(16px, 4vw, 40px) 64px; }
+.eyebrow{ font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:var(--ink-faint); }
+h1{ margin:8px 0 0; font-size:clamp(26px, 4cqi, 34px); font-weight:600; letter-spacing:-.012em; }
+
+/* abas das listas */
+.lists{ display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:4px; margin-top:16px; padding:4px; border:1px solid var(--line); border-radius:11px; background:var(--surface); }
+.lists a{ display:flex; flex-direction:column; justify-content:center; padding:8px 12px; border-radius:8px; text-align:center; font-size:13.5px; font-weight:500; line-height:1.3; color:var(--ink-dim); }
+.lists a small{ margin-top:2px; font-size:10.5px; font-weight:400; color:var(--ink-faint); }
+.lists a:hover{ background:var(--surface-2); color:var(--ink); }
+.lists a.on{ background:var(--accent-soft); color:var(--ink); }
+.lists a.on small{ color:var(--accent); }
+
+.listhead{ display:flex; align-items:flex-end; gap:12px 16px; flex-wrap:wrap; margin-top:22px; }
+.lh-txt{ flex:1 1 320px; min-width:0; }
+.listhead h2{ margin:0; font-size:21px; font-weight:600; }
+.listhead p{ margin:4px 0 0; font-size:14px; line-height:1.55; color:var(--ink-dim); }
+
+/* atalhos para cada questão */
+.jump{ display:flex; flex-wrap:wrap; gap:6px; margin-top:14px; }
+.jump button{ min-width:34px; padding:4px 8px; border-radius:8px; border:1px solid var(--line); background:var(--surface); color:var(--ink-dim); font-family:"IBM Plex Mono",monospace; font-size:12.5px; }
+.jump button:hover{ border-color:var(--accent); color:var(--accent); }
+
+/* questão */
+.q{ margin-top:34px; padding-top:24px; border-top:1px solid var(--line-soft); scroll-margin-top:68px; }
+.qh{ display:flex; align-items:baseline; flex-wrap:wrap; gap:6px 10px; }
+.qn{ font-size:12.5px; font-weight:600; color:var(--accent); }
+.qh h3{ margin:0; font-family:var(--serif); font-size:22px; font-weight:600; line-height:1.25; }
+.kind{ font-size:10.5px; letter-spacing:.08em; text-transform:uppercase; padding:1px 8px; border-radius:99px; border:1px solid var(--line); color:var(--ink-faint); }
+
+/* atalho para a teoria (questões sem exercício corrigível) */
+.teos{ display:flex; flex-wrap:wrap; gap:6px; margin-top:12px; }
+.teo{ display:inline-flex; align-items:center; gap:5px; font-size:12px; padding:5px 10px; border-radius:7px; border:1px solid var(--afd); color:var(--afd); background:var(--accent-soft); }
+.teo b{ font-weight:600; }
+.teo:hover{ filter:brightness(1.15); }
+
+/* mesmo corpo de texto da teoria */
+.body{ font-family:var(--serif); font-size:17px; line-height:1.72; }
+
+:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
+
+@container app (max-width:560px){
+  .tbtn .lbl{ display:none; }
+  .lists{ grid-template-columns:minmax(0, 1fr); }
+  .qh h3{ font-size:19px; }
+  .body{ font-size:16px; }
+}
+@media (pointer:coarse){
+  .jump button{ min-width:40px; min-height:40px; }
+  .teo{ min-height:36px; }
+}

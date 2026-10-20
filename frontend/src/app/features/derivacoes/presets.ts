@@ -1,7 +1,7 @@
 /**
  * Gramáticas prontas, agrupadas pela atividade de onde vieram. Dado estático.
  * `atividade` liga o grupo ao PDF (core/atividades.ts); `section` liga a questão
- * à resolução/exercício na parte prática da teoria.
+ * à resolução/exercício em Exercícios resolvidos.
  */
 export interface Preset {
   id: string;          // único entre todos os grupos (é o que fica salvo)
@@ -38,11 +38,11 @@ export const PRESET_GROUPS: PresetGroup[] = [
         note: 'Escrita com espaços: “id” é um terminal só. Ambígua e com a regra inútil EXPR → EXPR.' },
       { id: 'gr-q1', label: 'Regulares Q1 · termina em 1 (0101)', grammar: 'S → 0S | 1B\nB → 0S | 1B | ε', word: '0101', section: 'ex-gr-q1',
         note: 'Gramática regular: a derivação é a própria simulação do AFD.' },
-      { id: 'gr-q2', label: 'Regulares Q2 · R → aS | aR | bR (baaab)', grammar: 'R → aS | aR | bR\nS → aT\nT → aX | bX\nX → a | b', word: 'baaab',
+      { id: 'gr-q2', label: 'Regulares Q2 · R → aS | aR | bR (baaab)', grammar: 'R → aS | aR | bR\nS → aT\nT → aX | bX\nX → a | b', word: 'baaab', section: 'ex-gr-q2',
         note: 'R lendo a vai para dois lugares (R → aS | aR): o AF direto é um AFN.' },
-      { id: 'gr-q5a', label: 'Regulares Q5a (abb)', grammar: 'S → aA | bB | ε\nA → aA | bB\nB → bB | b', word: 'abb',
+      { id: 'gr-q5a', label: 'Regulares Q5a (abb)', grammar: 'S → aA | bB | ε\nA → aA | bB\nB → bB | b', word: 'abb', section: 'ex-gr-q5',
         note: 'S → ε: o estado inicial também é final.' },
-      { id: 'gr-q5b', label: 'Regulares Q5b (01122)', grammar: 'S → 0S | 1A | 2B | 0 | 0C\nA → 1S | 1\nB → 2S | 2\nC → 0S | 0', word: '01122',
+      { id: 'gr-q5b', label: 'Regulares Q5b (01122)', grammar: 'S → 0S | 1A | 2B | 0 | 0C\nA → 1S | 1\nB → 2S | 2\nC → 0S | 0', word: '01122', section: 'ex-gr-q5',
         note: 'S → 0S | 0C: duas saídas com 0, AFN.' },
     ],
   },
