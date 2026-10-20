@@ -3,6 +3,7 @@ import { Router, RouterLink } from '@angular/router';
 import { Exercise, Feedback, Verdict, grade, initialAnswer } from '../domain/exercise';
 import { Production, checkDerivation, isNT, parseGrammar, showForm, showProd, tokenizeForm } from '../domain/grammar';
 import { TreeEditorComponent } from './tree-editor.component';
+import { Sym, SymBarComponent } from './sym-bar.component';
 
 const STORE = 'bancada-exercicios-v1';
 const MAX_ANSWER = 6000;
@@ -38,7 +39,7 @@ const KIND_LABEL: Record<string, string> = {
 @Component({
   selector: 'app-exercise',
   standalone: true,
-  imports: [TreeEditorComponent, RouterLink],
+  imports: [TreeEditorComponent, RouterLink, SymBarComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './exercise.component.html',
   styleUrl: './exercise.component.css',
@@ -80,6 +81,18 @@ export class ExerciseComponent {
   readonly correctOption = computed(() => { const c = this.ex().check; return c.kind === 'choice' ? c.options[c.correct] : ''; });
   readonly canOpenLab = computed(() => this.kind() === 'derivation' || this.kind() === 'tree');
   readonly rows = computed(() => ({ derivation: 8, sentences: 12, concept: 4, build: 5, automaton: 9, outside: 4 } as Record<string, number>)[this.kind()] ?? 4);
+  /** Botões de símbolo acima do campo: só onde o símbolo faz sentido (AFD não tem transição vazia). */
+  readonly syms = computed<Sym[]>(() => {
+    const c = this.ex().check;
+    switch (c.kind) {
+      case 'build': return [{ s: 'ε', label: 'vazio' }, { s: '→' }];
+      case 'automaton': return c.deterministic ? [] : [{ s: 'ε', label: 'transição vazia' }];
+      case 'outside': return [{ s: 'ε', label: 'palavra vazia' }];
+      case 'derivation': case 'sentences': case 'tree': return [{ s: 'ε', label: 'vazio' }];
+      default: return [];
+    }
+  });
+  readonly typed = computed(() => (this.kind() === 'build' ? ['eps', '->'] : ['eps']));
   readonly placeholder = computed(() => ({
     derivation: 'Uma forma sentencial por linha (ou separadas por ⇒)',
     sentences: 'S\naSbSa\n…\n\n(linha em branco entre uma derivação e outra)',

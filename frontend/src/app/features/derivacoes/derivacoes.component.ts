@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { TreeEditorComponent } from '../../shared/tree-editor.component';
+import { SymBarComponent } from '../../shared/sym-bar.component';
 import { SiteNavComponent } from '../../shared/site-nav.component';
 import { ThemeService } from '../../core/services/theme.service';
 import { PdfWindowService } from '../../core/services/pdf-window.service';
@@ -34,7 +35,7 @@ function load(): Saved | null {
 @Component({
   selector: 'app-derivacoes',
   standalone: true,
-  imports: [RouterLink, TreeEditorComponent, SiteNavComponent],
+  imports: [RouterLink, TreeEditorComponent, SiteNavComponent, SymBarComponent],
   templateUrl: './derivacoes.component.html',
   styleUrl: './derivacoes.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,

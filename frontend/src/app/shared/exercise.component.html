@@ -24,12 +24,14 @@
     }
     @case ('tree') {
       <label class="lab mono" [attr.for]="ex().id">Árvore — nó[filhos], ou clique nos nós abaixo</label>
-      <textarea class="inp code" [id]="ex().id" rows="2" spellcheck="false" autocomplete="off" [attr.maxlength]="6000"
+      <app-sym-bar [target]="taTree" [syms]="syms()" [typed]="typed()" />
+      <textarea #taTree class="inp code" [id]="ex().id" rows="2" spellcheck="false" autocomplete="off" [attr.maxlength]="6000"
                 [value]="answer()" (input)="setAnswer($any($event.target).value)"></textarea>
       <app-tree-editor [grammar]="grammar()" [text]="answer()" [word]="wordTokens()" (textChange)="setAnswer($event)" />
     }
     @default {
-      <textarea class="inp" [class.code]="kind() !== 'concept'" [id]="ex().id" [rows]="rows()" spellcheck="false" autocomplete="off"
+      @if (syms().length) { <app-sym-bar [target]="ta" [syms]="syms()" [typed]="typed()" /> }
+      <textarea #ta class="inp" [class.code]="kind() !== 'concept'" [id]="ex().id" [rows]="rows()" spellcheck="false" autocomplete="off"
                 [attr.maxlength]="6000" [placeholder]="placeholder()" [attr.aria-label]="'Resposta ' + ex().label"
                 [value]="answer()" (input)="setAnswer($any($event.target).value)"></textarea>
     }
