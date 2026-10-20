@@ -50,7 +50,7 @@ function toQuestion(s: Section): Question {
 const QUESTIONS = new Map<Chapter, Question[]>(EXERCICIOS.map((c) => [c, c.sections.map(toQuestion)]));
 
 /**
- * Exercícios resolvidos: uma aba por lista e, em cada lista, todas as questões
+ * Exercícios: uma aba por lista e, em cada lista, todas as questões
  * em sequência (derivações, árvores e questões teóricas juntas, na ordem do
  * PDF). Cada exercício tem atalho para a teoria do assunto.
  */

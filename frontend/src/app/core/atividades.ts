@@ -7,7 +7,7 @@ export interface Atividade extends PdfDoc {
   pages: number;
   size: string;
   topics: string[];
-  /** Questões em Exercícios resolvidos (/exercicios/<section>) com a resolução comentada. */
+  /** Questões em Exercícios (/exercicios/<section>) com a resolução comentada. */
   solutions: { label: string; section: string }[];
 }
 

@@ -1,7 +1,7 @@
 /**
  * Gramáticas prontas, agrupadas pela atividade de onde vieram. Dado estático.
  * `atividade` liga o grupo ao PDF (core/atividades.ts); `section` liga a questão
- * à resolução/exercício em Exercícios resolvidos.
+ * à resolução/exercício em Exercícios.
  */
 export interface Preset {
   id: string;          // único entre todos os grupos (é o que fica salvo)

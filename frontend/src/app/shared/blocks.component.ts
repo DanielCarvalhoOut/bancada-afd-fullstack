@@ -32,7 +32,7 @@ let uid = 0;
 
 /**
  * Desenha os blocos de conteúdo (texto, listas, tabelas, notas, figuras e
- * exercícios). Usado pela teoria e pelos exercícios resolvidos, para os dois
+ * exercícios). Usado pela teoria e pelos exercícios, para os dois
  * mostrarem o mesmo conteúdo do mesmo jeito. As figuras são autômatos reais,
  * abríveis na bancada.
  */

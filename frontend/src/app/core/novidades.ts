@@ -17,7 +17,7 @@ export const NOVIDADES = {
   mudou: [
     {
       icone: 'exercicios',
-      titulo: 'Exercícios resolvidos têm página própria',
+      titulo: 'Exercícios têm página própria',
       texto: 'Saíram da Teoria: uma aba por lista, na ordem do PDF. Links antigos continuam valendo.',
       link: { path: '/exercicios', label: 'Abrir' },
     },

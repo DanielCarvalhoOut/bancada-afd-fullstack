@@ -10,7 +10,7 @@ export const routes: Routes = [
   { path: 'teoria/:sec', loadComponent: () => import('./features/teoria/teoria.component').then((m) => m.TeoriaComponent) },
   { path: 'derivacoes', loadComponent: () => import('./features/derivacoes/derivacoes.component').then((m) => m.DerivacoesComponent), title: 'Derivações e árvores' },
   { path: 'atividades', loadComponent: () => import('./features/atividades/atividades.component').then((m) => m.AtividadesComponent), title: 'Atividades' },
-  { path: 'exercicios', loadComponent: () => import('./features/exercicios/exercicios.component').then((m) => m.ExerciciosComponent), title: 'Exercícios resolvidos' },
+  { path: 'exercicios', loadComponent: () => import('./features/exercicios/exercicios.component').then((m) => m.ExerciciosComponent), title: 'Exercícios' },
   { path: 'exercicios/:id', loadComponent: () => import('./features/exercicios/exercicios.component').then((m) => m.ExerciciosComponent) },
   { path: '**', redirectTo: '' },
 ];
