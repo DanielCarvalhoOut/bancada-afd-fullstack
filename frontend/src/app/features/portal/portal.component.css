@@ -8,6 +8,9 @@
 .wordmark .txt small{ display:block; font-family:"IBM Plex Mono",monospace; font-weight:400; font-size:10px; letter-spacing:.1em; color:var(--ink-dim); text-transform:uppercase; margin-top:2px; }
 .theme{ width:38px; height:38px; border-radius:9px; border:1px solid var(--line); background:var(--surface); color:var(--ink); display:flex; align-items:center; justify-content:center; }
 .theme:hover{ border-color:var(--ink-dim); }
+.top-acts{ display:flex; align-items:center; gap:8px; }
+.news{ height:38px; padding:0 13px; border-radius:9px; border:1px solid var(--line); background:var(--surface); color:var(--ink-dim); font-size:13px; font-weight:500; }
+.news:hover{ border-color:var(--accent); color:var(--accent); }
 
 .portal-lead{ padding:4px 0 0; max-width:760px; }
 .portal-lead .eyebrow{ font-family:"IBM Plex Mono",monospace; font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--ink-dim); }
