@@ -5,8 +5,7 @@
     </a>
     <div class="brand mono">atividades</div>
     <div class="spacer"></div>
-    <a class="tbtn" routerLink="/derivacoes"><span class="lbl">Derivações</span><span class="sm" aria-hidden="true">⇒</span></a>
-    <a class="tbtn" routerLink="/bancada"><span class="lbl">Bancada</span><span class="sm" aria-hidden="true">◎</span></a>
+    <app-site-nav />
     <button class="iconbtn" (click)="theme.toggle()" title="Alternar tema" aria-label="Alternar tema">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8z"></path></svg>
     </button>
@@ -37,7 +36,7 @@
             @if (a.solutions.length) {
               <div class="sol">
                 <span class="mono">Resolução comentada:</span>
-                @for (s of a.solutions; track s.section) { <a [routerLink]="['/teoria', s.section]">{{ s.label }}</a> }
+                @for (s of a.solutions; track s.section) { <a [routerLink]="['/exercicios', s.section]">{{ s.label }}</a> }
               </div>
             }
           </div>

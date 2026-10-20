@@ -1,0 +1,52 @@
+<!-- ícones das páginas -->
+<ng-template #ico let-key>
+  @switch (key) {
+    @case ('inicio') {
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"></rect><rect x="14" y="3" width="7" height="7" rx="1"></rect><rect x="3" y="14" width="7" height="7" rx="1"></rect><rect x="14" y="14" width="7" height="7" rx="1"></rect></svg>
+    }
+    @case ('bancada') {
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="7" cy="12" r="4"></circle><circle cx="7" cy="12" r="1.6"></circle><path d="M12 12h9"></path><path d="M18 9l3 3-3 3"></path></svg>
+    }
+    @case ('teoria') {
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 4h6a4 4 0 0 1 4 4v13a3 3 0 0 0-3-3H2z"></path><path d="M22 4h-6a4 4 0 0 0-4 4v13a3 3 0 0 1 3-3h7z"></path></svg>
+    }
+    @case ('exercicios') {
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"></path><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z"></path></svg>
+    }
+    @case ('derivacoes') {
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="5" r="2.2"></circle><circle cx="6" cy="18" r="2.2"></circle><circle cx="18" cy="18" r="2.2"></circle><path d="M11 7l-4 9M13 7l4 9"></path></svg>
+    }
+    @case ('atividades') {
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"></path><path d="M14 3v5h5"></path><path d="M9 13h6M9 17h4"></path></svg>
+    }
+  }
+</ng-template>
+
+<!-- largo: as cinco páginas lado a lado -->
+<nav class="links" aria-label="Páginas">
+  @for (it of items; track it.key) {
+    <a [routerLink]="it.path" routerLinkActive="on" ariaCurrentWhenActive="page" [title]="it.label" [attr.aria-label]="it.label">
+      <ng-container *ngTemplateOutlet="ico; context: { $implicit: it.key }" />
+      <span class="lbl">{{ it.label }}</span>
+    </a>
+  }
+</nav>
+
+<!-- estreito: um botão com menu -->
+<div class="more">
+  <button type="button" class="iconbtn" [class.open]="open()" (click)="toggle()" [attr.aria-expanded]="open()" aria-controls="site-nav-menu" title="Páginas" aria-label="Ir para outra página">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="1.8"></circle><circle cx="12" cy="12" r="1.8"></circle><circle cx="19" cy="12" r="1.8"></circle></svg>
+  </button>
+  @if (open()) {
+    <nav id="site-nav-menu" class="menu" aria-label="Páginas">
+      <a routerLink="/" routerLinkActive="on" [routerLinkActiveOptions]="{ exact: true }" ariaCurrentWhenActive="page" (click)="close()">
+        <ng-container *ngTemplateOutlet="ico; context: { $implicit: 'inicio' }" />Início
+      </a>
+      @for (it of items; track it.key) {
+        <a [routerLink]="it.path" routerLinkActive="on" ariaCurrentWhenActive="page" (click)="close()">
+          <ng-container *ngTemplateOutlet="ico; context: { $implicit: it.key }" />{{ it.label }}
+        </a>
+      }
+    </nav>
+  }
+</div>

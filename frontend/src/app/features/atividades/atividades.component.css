@@ -3,7 +3,6 @@ a{ text-decoration:none; }
 .topbar{ position:sticky; top:0; z-index:30; height:56px; display:flex; align-items:center; gap:8px; padding:0 14px; background:var(--bg); border-bottom:1px solid var(--line); }
 .brand{ font-size:13px; font-weight:600; letter-spacing:.06em; padding:0 6px; }
 .spacer{ flex:1; }
-.tbtn .sm{ display:none; }
 
 /* mais largo: o mesmo texto quebra em menos linhas e os cards ficam mais baixos */
 .wrap{ max-width:1240px; margin:0 auto; padding:24px clamp(16px, 4vw, 40px) 28px; }
@@ -30,8 +29,6 @@ h2{ margin:6px 0 0; font-size:18px; font-weight:600; line-height:1.25; color:var
 
 @container app (max-width:560px){
   .card{ flex-direction:column; gap:12px; }
-  .tbtn .lbl{ display:none; }
-  .tbtn .sm{ display:inline; }
   .acts .tbtn{ flex:1; justify-content:center; }
 }
 @media (pointer:coarse){

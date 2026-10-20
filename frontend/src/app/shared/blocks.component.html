@@ -1,0 +1,87 @@
+<!-- seta compartilhada pelas figuras desta lista de blocos -->
+<svg class="defs" aria-hidden="true" focusable="false">
+  <defs>
+    <marker [attr.id]="arrowId" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" class="edge-arrowhead"></path>
+    </marker>
+  </defs>
+</svg>
+
+<!-- track b: ao trocar de seção os blocos (e o estado dos exercícios) são recriados -->
+@for (b of blocks(); track b) {
+  @switch (b.t) {
+    @case ('p') { <p [innerHTML]="b.html"></p> }
+    @case ('h') { <h2>{{ b.text }}</h2> }
+    @case ('list') {
+      @if (b.ordered) {
+        <ol class="prose-list">@for (it of b.items; track $index) { <li [innerHTML]="it"></li> }</ol>
+      } @else {
+        <ul class="prose-list">@for (it of b.items; track $index) { <li [innerHTML]="it"></li> }</ul>
+      }
+    }
+    @case ('table') {
+      <div class="tablewrap">
+        <table>
+          <thead><tr>@for (h of b.head; track $index) { <th [innerHTML]="h"></th> }</tr></thead>
+          <tbody>
+            @for (r of b.rows; track $index) {
+              <tr>@for (c of r; track $index) { <td [innerHTML]="c"></td> }</tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+    @case ('code') { <pre class="code mono">{{ b.text }}</pre> }
+    @case ('ex') { <app-exercise [ex]="b.ex" [theory]="theory()" /> }
+    @case ('sol') {
+      <!-- fechada por padrão: a pessoa tenta primeiro e abre se quiser -->
+      <details class="sol">
+        <summary><span class="sol-k mono">Resolução comentada</span><span class="sol-hint"><span class="sh">mostrar</span><span class="hd">ocultar</span></span></summary>
+        <app-blocks class="sol-b" [blocks]="b.blocks" [theory]="theory()" />
+      </details>
+    }
+    @case ('note') {
+      <aside class="note" [attr.data-kind]="b.kind">
+        <div class="note-k mono">{{ noteLabel[b.kind] }}@if (b.title) { <span> · {{ b.title }}</span> }</div>
+        <div class="note-b" [innerHTML]="b.html"></div>
+      </aside>
+    }
+    @case ('fig') {
+      <figure class="fig" [attr.data-kind]="b.model.kind ?? 'afd'">
+        @let l = layout(b.model);
+        @let arrow = 'url(#' + arrowId + ')';
+        <div class="stage">
+          <svg [attr.viewBox]="l.viewBox" [attr.width]="l.w" [attr.height]="l.h" preserveAspectRatio="xMidYMid meet" role="img" [attr.aria-label]="b.caption">
+            @for (e of l.edges; track e.key) {
+              <path [attr.d]="e.d" class="edge" [class.eps]="e.eps" [attr.marker-end]="arrow"></path>
+              <rect class="edge-label-bg" [attr.x]="e.lx - e.labelW / 2" [attr.y]="e.ly - 8" [attr.width]="e.labelW" height="15" rx="3"></rect>
+              <text class="edge-label" [class.eps]="e.eps" [attr.x]="e.lx" [attr.y]="e.ly + 4" text-anchor="middle">{{ e.label }}</text>
+            }
+            @if (l.start; as s) {
+              <path class="start-arrow" [attr.marker-end]="arrow" [attr.d]="'M ' + s.x1 + ' ' + s.y1 + ' L ' + s.x2 + ' ' + s.y2"></path>
+            }
+            @for (n of l.nodes; track n.id) {
+              <g class="st-node">
+                @if (n.accepting) {
+                  <circle [attr.cx]="n.x" [attr.cy]="n.y" r="28" class="st-accept"></circle>
+                  <circle [attr.cx]="n.x" [attr.cy]="n.y" r="23" class="st-accept-ring"></circle>
+                } @else {
+                  <circle [attr.cx]="n.x" [attr.cy]="n.y" r="28" class="st-normal"></circle>
+                }
+                <text class="st-label" [attr.x]="n.x" [attr.y]="n.y + 4" text-anchor="middle">{{ n.name }}</text>
+              </g>
+            }
+          </svg>
+        </div>
+        <figcaption>
+          <span class="tag mono">{{ (b.model.kind ?? 'afd').toUpperCase() }}</span>
+          <span class="cap">{{ b.caption }}</span>
+          <span class="acts">
+            <button class="mini" (click)="asReference(b.model, b.caption)" title="Abre ao lado da bancada, sem mexer no que você está editando">Referência</button>
+            <button class="mini" (click)="toEdit(b.model)" title="Carrega como o autômato em edição (substitui o atual)">Editar</button>
+          </span>
+        </figcaption>
+      </figure>
+    }
+  }
+}

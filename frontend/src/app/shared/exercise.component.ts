@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input, signal } from '@angular/core';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { Exercise, Feedback, Verdict, grade, initialAnswer } from '../domain/exercise';
 import { Production, checkDerivation, isNT, parseGrammar, showForm, showProd, tokenizeForm } from '../domain/grammar';
 import { TreeEditorComponent } from './tree-editor.component';
@@ -22,8 +22,12 @@ function writeStore(id: string, a: string, v: Verdict | null): void {
   } catch { /* modo privado / cota cheia: o exercício funciona sem salvar */ }
 }
 
+/** Seção de teoria ligada ao exercício (atalho “Dúvida?”). */
+export interface TheoryLink { id: string; title: string }
+
 const KIND_LABEL: Record<string, string> = {
   tree: 'árvore', sentences: 'derivações', choice: 'escolha', concept: 'dissertativa', build: 'construir gramática',
+  outside: 'palavras fora de L(G)',
 };
 
 /**
@@ -34,7 +38,7 @@ const KIND_LABEL: Record<string, string> = {
 @Component({
   selector: 'app-exercise',
   standalone: true,
-  imports: [TreeEditorComponent],
+  imports: [TreeEditorComponent, RouterLink],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './exercise.component.html',
   styleUrl: './exercise.component.css',
@@ -42,6 +46,7 @@ const KIND_LABEL: Record<string, string> = {
 export class ExerciseComponent {
   private readonly router = inject(Router);
   readonly ex = input.required<Exercise>();
+  readonly theory = input<TheoryLink[]>([]);
 
   private readonly saved = computed(() => readStore()[this.ex().id] ?? null);
   private readonly edited = signal<string | null>(null);
@@ -58,6 +63,7 @@ export class ExerciseComponent {
   readonly kindLabel = computed(() => {
     const c = this.ex().check;
     if (c.kind === 'derivation') return c.order === 'left' ? 'derivação mais à esquerda' : c.order === 'right' ? 'derivação mais à direita' : 'derivação';
+    if (c.kind === 'automaton') return c.deterministic ? 'construir AFD' : 'construir AF';
     return KIND_LABEL[c.kind];
   });
   readonly grammar = computed(() => {
@@ -73,12 +79,14 @@ export class ExerciseComponent {
   readonly options = computed(() => { const c = this.ex().check; return c.kind === 'choice' ? c.options : []; });
   readonly correctOption = computed(() => { const c = this.ex().check; return c.kind === 'choice' ? c.options[c.correct] : ''; });
   readonly canOpenLab = computed(() => this.kind() === 'derivation' || this.kind() === 'tree');
-  readonly rows = computed(() => ({ derivation: 8, sentences: 12, concept: 4, build: 5 } as Record<string, number>)[this.kind()] ?? 4);
+  readonly rows = computed(() => ({ derivation: 8, sentences: 12, concept: 4, build: 5, automaton: 9, outside: 4 } as Record<string, number>)[this.kind()] ?? 4);
   readonly placeholder = computed(() => ({
     derivation: 'Uma forma sentencial por linha (ou separadas por ⇒)',
     sentences: 'S\naSbSa\n…\n\n(linha em branco entre uma derivação e outra)',
     concept: 'Escreva a definição com suas palavras…',
     build: 'Uma regra por linha, ex.:\nS → aS | b',
+    automaton: 'inicial: S\nfinais: B\nS a S\nS b B\n(uma transição por linha: origem símbolo destino)',
+    outside: 'Uma palavra por linha (ε para a palavra vazia)',
   } as Record<string, string>)[this.kind()] ?? '');
 
   /** Última forma da derivação, para o "próximo passo" por clique. */

@@ -56,6 +56,12 @@
     <button type="button" class="tbtn" (click)="showAns.set(!showAns())" [attr.aria-expanded]="showAns()">{{ showAns() ? 'Ocultar resposta' : 'Ver resposta' }}</button>
     <button type="button" class="mini" (click)="reset()">Recomeçar</button>
     @if (canOpenLab()) { <button type="button" class="mini" (click)="openInLab()">Abrir em Derivações ↗</button> }
+    @if (theory().length) {
+      <span class="grow"></span>
+      @for (t of theory(); track t.id) {
+        <a class="mini teo" [routerLink]="['/teoria', t.id]" [title]="'Teoria: ' + t.title">Dúvida? <b>{{ t.title }}</b> ↗</a>
+      }
+    }
   </div>
 
   @if (feedback(); as f) {

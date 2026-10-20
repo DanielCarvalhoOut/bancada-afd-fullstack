@@ -3,6 +3,7 @@ import { Router, RouterLink } from '@angular/router';
 import { EditorStateService } from '../../core/services/editor-state.service';
 import { AutomatonKind } from '../../core/models/api.model';
 import { ThemeService } from '../../core/services/theme.service';
+import { NovidadesService } from '../../core/services/novidades.service';
 
 /** Portal: escolhe entre o espaço determinístico (AFD) e o não determinístico (AFN), ou abre a Teoria. */
 @Component({
@@ -17,6 +18,7 @@ export class PortalComponent {
     private router: Router,
     private editor: EditorStateService,
     public theme: ThemeService,
+    public novidades: NovidadesService,
   ) {}
 
   enter(space: AutomatonKind): void {
