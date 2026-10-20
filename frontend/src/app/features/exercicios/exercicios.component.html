@@ -60,7 +60,7 @@
         @if (!q.hasEx && q.theory.length) {
           <div class="teos">
             @for (t of q.theory; track t.id) {
-              <a class="teo" [routerLink]="['/teoria', t.id]"><span aria-hidden="true">📖</span> Dúvida? <b>{{ t.title }}</b> ↗</a>
+              <a class="teo" [routerLink]="['/teoria', t.id]">Dúvida? <b>{{ t.title }}</b> ↗</a>
             }
           </div>
         }

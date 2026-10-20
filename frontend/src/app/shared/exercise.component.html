@@ -59,7 +59,7 @@
     @if (theory().length) {
       <span class="grow"></span>
       @for (t of theory(); track t.id) {
-        <a class="mini teo" [routerLink]="['/teoria', t.id]" [title]="'Teoria: ' + t.title"><span aria-hidden="true">📖</span> Dúvida? <b>{{ t.title }}</b> ↗</a>
+        <a class="mini teo" [routerLink]="['/teoria', t.id]" [title]="'Teoria: ' + t.title">Dúvida? <b>{{ t.title }}</b> ↗</a>
       }
     }
   </div>
