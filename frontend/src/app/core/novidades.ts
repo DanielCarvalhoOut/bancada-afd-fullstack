@@ -2,7 +2,7 @@
  * Conteúdo do aviso de novidades. Para a próxima atualização: troque `versao`
  * (quem já viu a anterior vê de novo) e edite as listas.
  */
-export type NovidadeIcone = 'exercicios' | 'barra' | 'separar' | 'resolucao' | 'automato' | 'teoria' | 'pdf' | 'arvore';
+export type NovidadeIcone = 'exercicios' | 'barra' | 'separar' | 'resolucao' | 'automato' | 'simbolo' | 'teoria' | 'pdf' | 'arvore';
 
 export interface Novidade {
   icone: NovidadeIcone;
@@ -12,7 +12,7 @@ export interface Novidade {
 }
 
 export const NOVIDADES = {
-  versao: '2026-10-20.2',
+  versao: '2026-10-20.3',
   quando: 'Outubro de 2026',
   mudou: [
     {
@@ -44,6 +44,12 @@ export const NOVIDADES = {
       titulo: 'Correção em todas as listas',
       texto: 'Gramáticas e Gramáticas Regulares ganharam campo de resposta, inclusive para AF/AFD.',
       link: { path: '/exercicios/lista-gramaticas', label: 'Testar' },
+    },
+    {
+      icone: 'simbolo',
+      titulo: 'Botões para ε e →',
+      texto: 'Um clique insere o símbolo no campo de resposta. No teclado, vale eps e ->.',
+      link: { path: '/exercicios/ex-gram-q2', label: 'Testar' },
     },
     {
       icone: 'teoria',
