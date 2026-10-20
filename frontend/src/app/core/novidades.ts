@@ -42,7 +42,7 @@ export const NOVIDADES = {
     {
       icone: 'automato',
       titulo: 'Correção em todas as listas',
-      texto: 'Gramáticas e Gramáticas Regulares ganharam campo de resposta, inclusive para AF/AFD.',
+      texto: 'Gramáticas e Gramáticas Regulares ganharam campo de resposta, inclusive para AFN.',
       link: { path: '/exercicios/lista-gramaticas', label: 'Testar' },
     },
     {

@@ -28,9 +28,12 @@ export type ExCheck =
   | { kind: 'build'; alphabet: string[]; lang: (w: string) => boolean; maxLen: number }
   /**
    * Construir autômato, escrito como texto (ver parseAutomatonText): L(aluno) × L(ref),
-   * decidido de forma exata pelo motor. `deterministic` exige um AFD.
+   * decidido de forma exata pelo motor. `deterministic` exige um AFD. `exact` exige
+   * a mesma estrutura de `ref` (a tradução direta da gramática), a menos dos nomes
+   * dos estados: outro autômato com a mesma linguagem, como o AFD da construção de
+   * subconjuntos, não é aceito.
    */
-  | { kind: 'automaton'; ref: AutomatonModel; deterministic: boolean };
+  | { kind: 'automaton'; ref: AutomatonModel; deterministic: boolean; exact?: boolean };
 
 export interface Exercise {
   id: string;          // chave de armazenamento: única e estável
@@ -174,8 +177,57 @@ function gradeAutomaton(c: Extract<ExCheck, { kind: 'automaton' }>, answer: stri
     det = !errs.length;
     items.push(det ? { ok: true, text: 'É determinístico: no máximo uma saída por símbolo, sem ε.' } : { ok: false, text: `Não é um AFD: ${errs[0].message}` });
   }
+  if (c.exact && eq.equivalent) {
+    if (sameShape(p.model, c.ref)) {
+      items.push({ ok: true, text: 'É a tradução direta da gramática: os mesmos estados, inicial, finais e transições (nomes à parte).' });
+    } else {
+      const n = p.model.states.length, refN = c.ref.states.length;
+      const isDet = (m: AutomatonModel) => !determinismIssues({ ...m, kind: 'afd' }).some((i) => i.severity === 'error');
+      const refDet = isDet(c.ref);
+      // AFD no lugar do AFN: a tradução é não determinística, ou tem outro número de estados
+      if (isDet(p.model) && (!refDet || n !== refN)) {
+        items.push({ ok: false, text: refDet
+          ? `É um AFD com ${n} estados (como o da construção de subconjuntos, ou com estado morto). A disciplina pede o AFN da tradução direta, que tem ${refN} estados: um por não terminal, mais o final F quando há regra A → a.`
+          : `É determinístico, mas a tradução direta desta gramática é um AFN: algum estado tem duas saídas pelo mesmo símbolo. A disciplina pede esse AFN, com ${refN} estados: um por não terminal, mais o final F quando há regra A → a.` });
+        return { verdict: 'bad', title: 'Isso é um AFD. A resposta esperada é o AFN da tradução direta.', items };
+      }
+      const m = countEdges(p.model), refM = countEdges(c.ref);
+      items.push({ ok: false, text: `A tradução direta tem ${refN} estados e ${refM} transições; o seu tem ${n} e ${m}. Cada regra A → xB vira A —x→ B, cada A → x vira A —x→ F (final novo) e A → ε torna A final.` });
+      return { verdict: 'partial', title: 'Quase: a linguagem está certa, mas não é a tradução direta da gramática.', items };
+    }
+  }
   const ok = eq.equivalent && det;
   return { verdict: ok ? 'ok' : eq.equivalent ? 'partial' : 'bad', title: ok ? 'Correto.' : eq.equivalent ? 'Quase: a linguagem está certa, mas a questão pede um AFD.' : 'Ainda não.', items };
+}
+
+/** Transições contadas símbolo a símbolo (A —a,b→ B vale 2). */
+const edgeKeys = (m: AutomatonModel, name: (id: string) => string = (id) => id) =>
+  new Set(m.transitions.flatMap((t) => t.symbols.map((s) => `${name(t.from)}\u0001${s}\u0001${name(t.to)}`)));
+const countEdges = (m: AutomatonModel) => edgeKeys(m).size;
+
+/**
+ * Mesma estrutura, a menos dos nomes: existe uma bijeção entre os estados que
+ * preserva inicial, finais e todas as transições. Só é chamada com o mesmo
+ * número de estados da referência (no máximo 5 nas listas), então a busca é pequena.
+ */
+function sameShape(a: AutomatonModel, b: AutomatonModel): boolean {
+  if (a.states.length !== b.states.length) return false;
+  const eb = edgeKeys(b);
+  if (countEdges(a) !== eb.size) return false;
+  const map = new Map<string, string>(), used = new Set<string>();
+  const go = (i: number): boolean => {
+    if (i === a.states.length) return [...edgeKeys(a, (id) => map.get(id)!)].every((k) => eb.has(k));
+    const x = a.states[i];
+    for (const y of b.states) {
+      if (used.has(y.id) || y.initial !== x.initial || y.accepting !== x.accepting) continue;
+      map.set(x.id, y.id); used.add(y.id);
+      if (go(i + 1)) return true;
+      used.delete(y.id);
+    }
+    map.delete(x.id);
+    return false;
+  };
+  return go(0);
 }
 
 function gradeDerivation(gs: string, ws: string, order: 'left' | 'right' | 'any', answer: string): Feedback {
