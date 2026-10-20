@@ -46,4 +46,19 @@ figcaption{ display:flex; flex-wrap:wrap; align-items:center; gap:8px 10px; padd
 .mini{ font-size:12px; font-weight:500; padding:5px 10px; border-radius:7px; border:1px solid var(--line); background:var(--surface-2); color:var(--ink); }
 .mini:hover{ border-color:var(--accent); color:var(--accent); }
 :focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
+
+/* resolução comentada (recolhida) */
+.sol{ margin:22px 0 0; border:1px solid var(--line); border-radius:10px; background:var(--surface); }
+.sol > summary{ display:flex; align-items:center; gap:10px; min-height:44px; padding:0 14px; cursor:pointer; list-style:none; font-family:"IBM Plex Sans", system-ui, sans-serif; user-select:none; }
+.sol > summary::-webkit-details-marker{ display:none; }
+.sol > summary::before{ content:""; flex:none; width:7px; height:7px; border-right:1.6px solid var(--ink-dim); border-bottom:1.6px solid var(--ink-dim); transform:rotate(-45deg); transition:transform .15s; }
+.sol[open] > summary::before{ transform:rotate(45deg); }
+.sol-k{ font-size:11px; font-weight:600; letter-spacing:.1em; text-transform:uppercase; color:var(--ink-dim); }
+.sol-hint{ margin-left:auto; font-size:12.5px; color:var(--accent); }
+.sol .hd, .sol[open] .sh{ display:none; }
+.sol[open] .hd{ display:inline; }
+.sol > summary:hover .sol-k{ color:var(--ink); }
+.sol[open] > summary{ border-bottom:1px solid var(--line-soft); }
+.sol-b{ display:block; padding:0 16px 18px; }
+@media (prefers-reduced-motion:reduce){ .sol > summary::before{ transition:none; } }
 @media (pointer:coarse){ .mini{ min-height:36px; } }

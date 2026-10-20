@@ -17,10 +17,10 @@
 
     <!-- uma aba por lista -->
     <nav class="lists" aria-label="Listas">
-      @for (l of lists; track l.id; let i = $index) {
+      @for (l of lists; track l.id) {
         <a [routerLink]="['/exercicios', l.id]" [class.on]="l === list()" [attr.aria-current]="l === list() ? 'page' : null">
           <span>{{ l.title }}</span>
-          <small class="mono">E{{ i + 1 }} · {{ count(l) }} {{ count(l) === 1 ? 'questão' : 'questões' }}</small>
+          <small class="mono">{{ count(l) }} {{ count(l) === 1 ? 'questão' : 'questões' }}</small>
         </a>
       }
     </nav>

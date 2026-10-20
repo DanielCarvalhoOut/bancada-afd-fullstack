@@ -51,6 +51,7 @@ function blockText(b: Block): string {
     case 'note': return `${b.title ?? ''} ${b.html}`;
     case 'fig': return b.caption;
     case 'ex': return `${b.ex.label} ${b.ex.prompt}`;
+    case 'sol': return b.blocks.map(blockText).join(' ');
   }
 }
 

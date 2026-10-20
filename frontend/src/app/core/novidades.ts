@@ -2,7 +2,7 @@
  * Conteúdo do aviso de novidades. Para a próxima atualização: troque `versao`
  * (quem já viu a anterior vê de novo) e edite as listas.
  */
-export type NovidadeIcone = 'exercicios' | 'barra' | 'separar' | 'automato' | 'teoria' | 'pdf' | 'arvore';
+export type NovidadeIcone = 'exercicios' | 'barra' | 'separar' | 'resolucao' | 'automato' | 'teoria' | 'pdf' | 'arvore';
 
 export interface Novidade {
   icone: NovidadeIcone;
@@ -18,32 +18,37 @@ export const NOVIDADES = {
     {
       icone: 'exercicios',
       titulo: 'Exercícios resolvidos têm página própria',
-      texto: 'Saíram de dentro da Teoria. Uma aba por lista, todas as questões na ordem do PDF. Links antigos continuam funcionando.',
+      texto: 'Saíram da Teoria: uma aba por lista, na ordem do PDF. Links antigos continuam valendo.',
       link: { path: '/exercicios', label: 'Abrir' },
     },
     {
       icone: 'barra',
       titulo: 'Mesma barra em todas as páginas',
-      texto: 'Bancada, Teoria, Exercícios, Derivações e Atividades sempre no topo. No celular, no botão ⋯.',
+      texto: 'As cinco páginas sempre no topo. No celular, ficam no botão ⋯.',
     },
     {
       icone: 'separar',
       titulo: 'GLC: questões 5 a 8 separadas',
-      texto: 'Antes eram um bloco só; agora cada uma tem sua correção. Suas respostas foram mantidas.',
+      texto: 'Antes eram um bloco só; agora cada uma tem correção. Respostas mantidas.',
       link: { path: '/exercicios/ex-glc-q5', label: 'Ver' },
+    },
+    {
+      icone: 'resolucao',
+      titulo: 'Resolução comentada fica fechada',
+      texto: 'Tente primeiro: a resolução de cada questão abre em “mostrar”.',
     },
   ] as Novidade[],
   novo: [
     {
       icone: 'automato',
-      titulo: 'Correção de autômatos',
-      texto: 'Gramáticas Regulares Q2–Q5: escreva o AF/AFD e veja na hora a palavra que mostra o erro.',
-      link: { path: '/exercicios/ex-gr-q2', label: 'Testar' },
+      titulo: 'Correção em todas as listas',
+      texto: 'Gramáticas e Gramáticas Regulares ganharam campo de resposta, inclusive para AF/AFD.',
+      link: { path: '/exercicios/lista-gramaticas', label: 'Testar' },
     },
     {
       icone: 'teoria',
       titulo: '“Dúvida?” leva à teoria da questão',
-      texto: 'Cada exercício tem um atalho para a seção que explica o assunto. Três seções novas de GLC.',
+      texto: 'Cada exercício tem atalho para a seção que explica o assunto. Três seções novas.',
     },
     {
       icone: 'pdf',

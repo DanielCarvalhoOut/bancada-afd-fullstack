@@ -19,7 +19,9 @@ export type Block =
   | { t: 'note'; kind: NoteKind; title?: string; html: string }
   | { t: 'fig'; model: AutomatonModel; caption: string; re?: string }
   /** Exercício corrigível (responder, corrigir, ver resposta). */
-  | { t: 'ex'; ex: Exercise };
+  | { t: 'ex'; ex: Exercise }
+  /** Resolução comentada: fica fechada até a pessoa pedir para ver. */
+  | { t: 'sol'; blocks: Block[] };
 
 export interface Section {
   id: string;

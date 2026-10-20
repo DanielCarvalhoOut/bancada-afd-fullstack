@@ -19,6 +19,11 @@ export type ExCheck =
   | { kind: 'choice'; options: string[]; correct: number }
   /** Resposta dissertativa: confere se os pontos-chave aparecem (autoavaliação guiada). */
   | { kind: 'concept'; groups: { label: string; terms: string[] }[] }
+  /**
+   * `count` palavras diferentes que NÃO estão em L(G), uma por linha (ε vale).
+   * `lang` decide a pertinência; a conferência do conteúdo valida `lang` contra a gramática.
+   */
+  | { kind: 'outside'; alphabet: string[]; lang: (w: string) => boolean; count: number }
   /** Construir gramática: L(G) do aluno × linguagem pedida, em todas as palavras até maxLen. */
   | { kind: 'build'; alphabet: string[]; lang: (w: string) => boolean; maxLen: number }
   /**
@@ -56,11 +61,12 @@ export function grade(ex: Exercise, answer: string): Feedback {
     case 'derivation': return gradeDerivation(c.grammar, c.word, c.order, answer);
     case 'tree': return gradeTree(c.grammar, c.word, answer);
     case 'sentences': return gradeSentences(c.grammar, c.count, answer);
+    case 'outside': return gradeOutside(c, answer);
     case 'choice': {
       const i = Number.parseInt(answer, 10);
       if (!Number.isInteger(i)) return { verdict: 'bad', title: 'Escolha uma opção.', items: [] };
       const ok = i === c.correct;
-      return { verdict: ok ? 'ok' : 'bad', title: ok ? 'Correto.' : 'Ainda não.', items: ok ? [] : [{ ok: false, text: `“${c.options[i] ?? '?'}” não é a classificação desta gramática.` }] };
+      return { verdict: ok ? 'ok' : 'bad', title: ok ? 'Correto.' : 'Ainda não.', items: ok ? [] : [{ ok: false, text: `“${c.options[i] ?? '?'}” não é a resposta certa.` }] };
     }
     case 'concept': {
       const a = norm(answer);
@@ -237,6 +243,27 @@ function gradeSentences(gs: string, count: number, answer: string): Feedback {
     : blocks.length < count ? `Faltam derivações: escreva ${count}, separadas por uma linha em branco.`
     : 'Ainda faltam cadeias diferentes com derivação correta.';
   return { verdict: n >= count ? 'ok' : n > 0 ? 'partial' : 'bad', title, items };
+}
+
+function gradeOutside(c: Extract<ExCheck, { kind: 'outside' }>, answer: string): Feedback {
+  const lines = answer.split(/\r?\n/).map((l) => l.trim()).filter(Boolean).slice(0, 20);
+  const items: FeedbackItem[] = [];
+  const found = new Set<string>();
+  for (const raw of lines) {
+    // ε, eps, λ e "vazia" representam a palavra vazia; espaços entre símbolos são ignorados
+    const w = /^(ε|eps|λ|vazia)$/i.test(raw) ? '' : raw.replace(/\s+/g, '');
+    if (w.length > 40) { items.push({ ok: false, text: `“${raw.slice(0, 20)}…” é longa demais (máx. 40 símbolos).` }); continue; }
+    const bad = [...w].find((s) => !c.alphabet.includes(s));
+    if (bad) { items.push({ ok: false, text: `“${raw}”: o símbolo “${bad}” não está no alfabeto {${c.alphabet.join(', ')}}.` }); continue; }
+    if (found.has(w)) { items.push({ ok: false, text: `${showWord(w)} repete uma palavra anterior.` }); continue; }
+    if (c.lang(w)) { items.push({ ok: false, text: `${showWord(w)} é gerada pela gramática: está em L(G).` }); continue; }
+    found.add(w);
+    items.push({ ok: true, text: `${showWord(w)} ∉ L(G).` });
+  }
+  const n = found.size;
+  items.push({ ok: n >= c.count, text: `${n} de ${c.count} palavras fora de L(G).` });
+  const title = n >= c.count ? 'Correto.' : !lines.length ? `Escreva ${c.count} palavras, uma por linha.` : 'Ainda faltam palavras que não estejam em L(G).';
+  return { verdict: n >= c.count ? 'ok' : n > 0 ? 'partial' : 'bad', title, items };
 }
 
 function gradeBuild(c: Extract<ExCheck, { kind: 'build' }>, answer: string): Feedback {

@@ -31,7 +31,7 @@ const ALIAS: Record<string, string> = { 'ex-glc-q5a8': 'ex-glc-q5' };
 const PDF_OF: Record<string, string> = { 'lista-gramaticas': 'lista-gramaticas', 'lista-gr': 'lista-gramaticas', 'lista-glc': 'lista-glc' };
 const KIND: Record<string, string> = {
   derivation: 'derivação', tree: 'árvore', sentences: 'derivações', choice: 'escolha',
-  concept: 'dissertativa', build: 'construir gramática', automaton: 'construir autômato',
+  concept: 'dissertativa', build: 'construir gramática', automaton: 'construir autômato', outside: 'fora de L(G)',
 };
 
 function toQuestion(s: Section): Question {

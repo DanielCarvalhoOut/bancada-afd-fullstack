@@ -33,6 +33,13 @@
     }
     @case ('code') { <pre class="code mono">{{ b.text }}</pre> }
     @case ('ex') { <app-exercise [ex]="b.ex" [theory]="theory()" /> }
+    @case ('sol') {
+      <!-- fechada por padrão: a pessoa tenta primeiro e abre se quiser -->
+      <details class="sol">
+        <summary><span class="sol-k mono">Resolução comentada</span><span class="sol-hint"><span class="sh">mostrar</span><span class="hd">ocultar</span></span></summary>
+        <app-blocks class="sol-b" [blocks]="b.blocks" [theory]="theory()" />
+      </details>
+    }
     @case ('note') {
       <aside class="note" [attr.data-kind]="b.kind">
         <div class="note-k mono">{{ noteLabel[b.kind] }}@if (b.title) { <span> · {{ b.title }}</span> }</div>
